@@ -1,7 +1,7 @@
 {
-  "id": "mapsDashboardsPlugin",
+  "id": "mapsExplorerDashboards",
   "version": "1.0.0",
-  "opensearchDashboardsVersion": "opensearchDashboards",
+  "opensearchDashboardsVersion": "1.3.3",
   "server": true,
   "ui": true,
   "requiredPlugins": ["navigation"],

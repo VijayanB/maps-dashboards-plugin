@@ -1,4 +1,4 @@
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface MapsDashboardsPluginPluginSetup {}
+export interface MapsExplorerDashboardsPluginSetup {}
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface MapsDashboardsPluginPluginStart {}
+export interface MapsExplorerDashboardsPluginStart {}

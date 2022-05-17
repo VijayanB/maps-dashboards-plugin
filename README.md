@@ -3,15 +3,15 @@
 <img src="https://opensearch.org/assets/img/opensearch-logo-themed.svg" height="64px">
 
 
-- [OpenSearch Maps Dashboard Plugin](#opensearch-maps-dashboard-plugin)
+- [OpenSearch Maps Explorer Dashboards Plugin](#opensearch-maps-explorer-dashboard-plugin)
 - [Features](#features)
 - [Installation Guide](#installation-guide)
 - [Security](#security)
 - [Copyright](#copyright)
 
-## OpenSearch Maps Dashboard Plugin
+## OpenSearch Maps Explorer Dashboard Plugin
 
-The OpenSearch Maps Dashboards plugin enables you to add or remove specific layers on demand via layers panel.
+The OpenSearch Maps Explorer Dashboards plugin enables you to add or remove specific layers on demand via layers panel.
 
 ## Features
 

@@ -3,7 +3,7 @@ import { IRouter } from '../../../../src/core/server';
 export function defineRoutes(router: IRouter) {
   router.get(
     {
-      path: '/api/maps_dashboards_plugin/example',
+      path: '/api/maps_explorer_dashboards/example',
       validate: false,
     },
     async (context, request, response) => {

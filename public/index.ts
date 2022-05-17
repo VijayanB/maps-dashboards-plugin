@@ -1,10 +1,10 @@
 import './index.scss';
 
-import { MapsDashboardsPluginPlugin } from './plugin';
+import { MapsExplorerDashboardsPlugin } from './plugin';
 
 // This exports static code and TypeScript types,
 // as well as, OpenSearch Dashboards Platform `plugin()` initializer.
 export function plugin() {
-  return new MapsDashboardsPluginPlugin();
+  return new MapsExplorerDashboardsPlugin();
 }
-export { MapsDashboardsPluginPluginSetup, MapsDashboardsPluginPluginStart } from './types';
+export { MapsExplorerDashboardsPluginSetup, MapsExplorerDashboardsPluginStart } from './types';

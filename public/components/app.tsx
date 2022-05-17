@@ -21,29 +21,29 @@ import { NavigationPublicPluginStart } from '../../../../src/plugins/navigation/
 
 import { PLUGIN_ID, PLUGIN_NAME } from '../../common';
 
-interface MapsDashboardsPluginAppDeps {
+interface MapsExplorerDashboardsAppDeps {
   basename: string;
   notifications: CoreStart['notifications'];
   http: CoreStart['http'];
   navigation: NavigationPublicPluginStart;
 }
 
-export const MapsDashboardsPluginApp = ({
+export const MapsExplorerDashboardsApp = ({
   basename,
   notifications,
   http,
   navigation,
-}: MapsDashboardsPluginAppDeps) => {
+}: MapsExplorerDashboardsAppDeps) => {
   // Use React hooks to manage state.
   const [timestamp, setTimestamp] = useState<string | undefined>();
 
   const onClickHandler = () => {
     // Use the core http service to make a response to the server API.
-    http.get('/api/maps_dashboards_plugin/example').then((res) => {
+    http.get('/api/maps_explorer_dashboards/example').then((res) => {
       setTimestamp(res.time);
       // Use the core notifications service to display a success message.
       notifications.toasts.addSuccess(
-        i18n.translate('mapsDashboardsPlugin.dataUpdated', {
+        i18n.translate('mapsExplorerDashboards.dataUpdated', {
           defaultMessage: 'Data updated',
         })
       );
@@ -67,7 +67,7 @@ export const MapsDashboardsPluginApp = ({
                 <EuiTitle size="l">
                   <h1>
                     <FormattedMessage
-                      id="mapsDashboardsPlugin.helloWorldText"
+                      id="mapsExplorerDashboards.helloWorldText"
                       defaultMessage="{name}"
                       values={{ name: PLUGIN_NAME }}
                     />
@@ -79,7 +79,7 @@ export const MapsDashboardsPluginApp = ({
                   <EuiTitle>
                     <h2>
                       <FormattedMessage
-                        id="mapsDashboardsPlugin.congratulationsTitle"
+                        id="mapsExplorerDashboards.congratulationsTitle"
                         defaultMessage="Congratulations, you have successfully created a new OpenSearch Dashboards Plugin!"
                       />
                     </h2>
@@ -89,21 +89,21 @@ export const MapsDashboardsPluginApp = ({
                   <EuiText>
                     <p>
                       <FormattedMessage
-                        id="mapsDashboardsPlugin.content"
+                        id="mapsExplorerDashboards.content"
                         defaultMessage="Look through the generated code and check out the plugin development documentation."
                       />
                     </p>
                     <EuiHorizontalRule />
                     <p>
                       <FormattedMessage
-                        id="mapsDashboardsPlugin.timestampText"
+                        id="mapsExplorerDashboards.timestampText"
                         defaultMessage="Last timestamp: {time}"
                         values={{ time: timestamp ? timestamp : 'Unknown' }}
                       />
                     </p>
                     <EuiButton type="primary" size="s" onClick={onClickHandler}>
                       <FormattedMessage
-                        id="mapsDashboardsPlugin.buttonText"
+                        id="mapsExplorerDashboards.buttonText"
                         defaultMessage="Get data"
                       />
                     </EuiButton>

@@ -1,11 +1,11 @@
 import { PluginInitializerContext } from '../../../src/core/server';
-import { MapsDashboardsPluginPlugin } from './plugin';
+import { MapsExplorerDashboardsPlugin } from './plugin';
 
 // This exports static code and TypeScript types,
 // as well as, OpenSearch Dashboards Platform `plugin()` initializer.
 
 export function plugin(initializerContext: PluginInitializerContext) {
-  return new MapsDashboardsPluginPlugin(initializerContext);
+  return new MapsExplorerDashboardsPlugin(initializerContext);
 }
 
-export { MapsDashboardsPluginPluginSetup, MapsDashboardsPluginPluginStart } from './types';
+export { MapsExplorerDashboardsPluginSetup, MapsExplorerDashboardsPluginStart } from './types';

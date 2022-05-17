@@ -1,7 +1,7 @@
 {
-  "prefix": "mapsDashboardsPlugin",
+  "prefix": "mapsExplorerDashboards",
   "paths": {
-    "mapsDashboardsPlugin": "."
+    "mapsExplorerDashboards": "."
   },
   "translations": ["translations/ja-JP.json"]
 }

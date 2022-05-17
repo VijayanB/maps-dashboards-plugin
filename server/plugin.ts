@@ -6,11 +6,11 @@ import {
   Logger,
 } from '../../../src/core/server';
 
-import { MapsDashboardsPluginPluginSetup, MapsDashboardsPluginPluginStart } from './types';
+import { MapsExplorerDashboardsPluginSetup, MapsExplorerDashboardsPluginStart } from './types';
 import { defineRoutes } from './routes';
 
-export class MapsDashboardsPluginPlugin
-  implements Plugin<MapsDashboardsPluginPluginSetup, MapsDashboardsPluginPluginStart> {
+export class MapsExplorerDashboardsPlugin
+  implements Plugin<MapsExplorerDashboardsPluginSetup, MapsExplorerDashboardsPluginStart> {
   private readonly logger: Logger;
 
   constructor(initializerContext: PluginInitializerContext) {
@@ -18,7 +18,7 @@ export class MapsDashboardsPluginPlugin
   }
 
   public setup(core: CoreSetup) {
-    this.logger.debug('mapsDashboardsPlugin: Setup');
+    this.logger.debug('mapsExplorerDashboards: Setup');
     const router = core.http.createRouter();
 
     // Register server side APIs
@@ -28,7 +28,7 @@ export class MapsDashboardsPluginPlugin
   }
 
   public start(core: CoreStart) {
-    this.logger.debug('mapsDashboardsPlugin: Started');
+    this.logger.debug('mapsExplorerDashboards: Started');
     return {};
   }
 

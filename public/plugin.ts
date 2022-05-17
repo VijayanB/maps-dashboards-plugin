@@ -1,18 +1,18 @@
 import { i18n } from '@osd/i18n';
 import { AppMountParameters, CoreSetup, CoreStart, Plugin } from '../../../src/core/public';
 import {
-  MapsDashboardsPluginPluginSetup,
-  MapsDashboardsPluginPluginStart,
+  MapsExplorerDashboardsPluginSetup,
+  MapsExplorerDashboardsPluginStart,
   AppPluginStartDependencies,
 } from './types';
 import { PLUGIN_NAME } from '../common';
 
-export class MapsDashboardsPluginPlugin
-  implements Plugin<MapsDashboardsPluginPluginSetup, MapsDashboardsPluginPluginStart> {
-  public setup(core: CoreSetup): MapsDashboardsPluginPluginSetup {
+export class MapsExplorerDashboardsPlugin
+  implements Plugin<MapsExplorerDashboardsPluginSetup, MapsExplorerDashboardsPluginStart> {
+  public setup(core: CoreSetup): MapsExplorerDashboardsPluginSetup {
     // Register an application into the side navigation menu
     core.application.register({
-      id: 'mapsDashboardsPlugin',
+      id: 'mapsExplorerDashboards',
       title: PLUGIN_NAME,
       async mount(params: AppMountParameters) {
         // Load application bundle
@@ -27,7 +27,7 @@ export class MapsDashboardsPluginPlugin
     // Return methods that should be available to other plugins
     return {
       getGreeting() {
-        return i18n.translate('mapsDashboardsPlugin.greetingText', {
+        return i18n.translate('mapsExplorerDashboards.greetingText', {
           defaultMessage: 'Hello from {name}!',
           values: {
             name: PLUGIN_NAME,
@@ -37,7 +37,7 @@ export class MapsDashboardsPluginPlugin
     };
   }
 
-  public start(core: CoreStart): MapsDashboardsPluginPluginStart {
+  public start(core: CoreStart): MapsExplorerDashboardsPluginStart {
     return {};
   }
 
