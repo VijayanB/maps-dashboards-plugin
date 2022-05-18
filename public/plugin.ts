@@ -1,28 +1,23 @@
 import { i18n } from '@osd/i18n';
-import { AppMountParameters, CoreSetup, CoreStart, Plugin } from '../../../src/core/public';
+import { CoreSetup, CoreStart, Plugin } from '../../../src/core/public';
 import {
   MapsExplorerDashboardsPluginSetup,
   MapsExplorerDashboardsPluginStart,
-  AppPluginStartDependencies,
+  MapsExplorerDashboardsPluginSetupDependencies,
+  createMapsExplorerDashboardsVisTypeDefinition,
 } from './types';
 import { PLUGIN_NAME } from '../common';
 
 export class MapsExplorerDashboardsPlugin
   implements Plugin<MapsExplorerDashboardsPluginSetup, MapsExplorerDashboardsPluginStart> {
-  public setup(core: CoreSetup): MapsExplorerDashboardsPluginSetup {
-    // Register an application into the side navigation menu
-    core.application.register({
-      id: 'mapsExplorerDashboards',
-      title: PLUGIN_NAME,
-      async mount(params: AppMountParameters) {
-        // Load application bundle
-        const { renderApp } = await import('./application');
-        // Get start services as specified in opensearch_dashboards.json
-        const [coreStart, depsStart] = await core.getStartServices();
-        // Render the application
-        return renderApp(coreStart, depsStart as AppPluginStartDependencies, params);
-      },
-    });
+  public setup(
+      core: CoreSetup,
+      { expressions, visualizations }: MapsExplorerDashboardsPluginSetupDependencies
+    ) {
+
+    visualizations.createBaseVisualization(
+      createMapsExplorerDashboardsVisTypeDefinition()
+    );
 
     // Return methods that should be available to other plugins
     return {
