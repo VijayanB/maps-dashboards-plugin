@@ -1,12 +1,14 @@
 import React from 'react';
 import { i18n } from '@osd/i18n';
-import { convertToGeoJson } from '../../../src/plugins/maps_legacy/public';
+import { convertToGeoJson } from '.';
 import { truncatedColorSchemas } from '../../../src/plugins/charts/public';
-import { createTileMapVisualization } from '../../../src/plugins/tile_map/public';
+import { Vis } from '../../../src/plugins/visualizations/public';
+import { MapsExplorerDashboardsVisualizationDependencies } from './plugin';
+import { createVisualization } from './maps_explorer_dashboards_visualization';
 
-export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies) => {
-  const { uiSettings, regionmapsConfig, getServiceSettings } = dependencies;
-  const CoordinateMapsVisualization = createTileMapVisualization(dependencies);
+export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: MapsExplorerDashboardsVisualizationDependencies) => {
+  const { uiSettings, getServiceSettings } = dependencies;
+  const visualization = createVisualization(dependencies);
 
   return {
     name: 'maps_explorer_dashboards',
@@ -20,22 +22,22 @@ export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies) => {
     }),
     visConfig: {
       defaults: {
-        legendPosition: 'bottomright',
-        addTooltip: true,
         colorSchema: 'Yellow to Red',
-        emsHotLink: '',
-        isDisplayWarning: true,
-        wms: 'DDG',
+        mapType: 'Scaled Circle Markers',
+        isDesaturated: true,
+        addTooltip: true,
+        heatClusterSize: 1.5,
+        legendPosition: 'bottomright',
         mapZoom: 2,
         mapCenter: [0, 0],
-        outlineWeight: 1,
-        showAllShapes: true, //still under consideration
+        wms: uiSettings.get('visualization:tileMap:WMSdefaults'),
       }
     },
-    visualization: CoordinateMapsVisualization,
+    visualization,
     responseHandler: convertToGeoJson,
     editorConfig: {
-      optionsTemplate: (props) => (
+      hideSidebar: true,
+      optionsTemplate: () => (
         null
       ),
       collections: {
@@ -44,7 +46,7 @@ export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies) => {
         tmsLayers: [],
       },
     },
-    setup: async (vis) => {
+    setup: async (vis: Vis) => {
       let tmsLayers;
 
       try {
