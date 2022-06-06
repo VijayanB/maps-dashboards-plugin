@@ -1,6 +1,31 @@
+import { get } from 'lodash';
 import { i18n } from '@osd/i18n';
+import {
+  ExpressionFunctionDefinition,
+  OpenSearchDashboardsDatatable,
+  Render,
+} from 'src/plugins/expressions/public';
+import { convertToGeoJson } from '.';
 
-export const createMapsExplorerDashboardsFn = () => ({
+interface Arguments {
+  // expression: string;
+  // interval: string;
+  visConfig: string;
+}
+
+interface RenderValue {
+  visType: 'maps_explorer_dashboards';
+  visConfig: Arguments;
+}
+
+export type MapsExplorerDashboardsExpressionFunctionDefinition = ExpressionFunctionDefinition<
+  'maps_explorer_dashboards',
+  OpenSearchDashboardsDatatable,
+  Arguments,
+  Render<RenderValue>
+>;
+
+export const createMapsExplorerDashboardsFn = (): MapsExplorerDashboardsExpressionFunctionDefinition => ({
   name: 'maps_explorer_dashboards',
   type: 'render',
   context: {
@@ -12,8 +37,9 @@ export const createMapsExplorerDashboardsFn = () => ({
   }),
   args: {
     visConfig: {
-      types: ['string', 'null'],
+      types: ['string'],
       default: '"{}"',
+      help: '',
     },
   },
   fn(context, args) {

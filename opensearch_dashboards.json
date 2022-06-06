@@ -8,10 +8,12 @@
     "navigation", 
     "visualizations", 
     "expressions",
-    "mapsLegacy"
+    "data",
+    "charts",
+    "opensearchDashboardsUtils",
+    "opensearchDashboardsReact",
+    "opensearchDashboardsLegacy"
   ],
   "requiredBundles": [
-    "charts",
-    "tileMap"
   ]
 }
