@@ -113,6 +113,7 @@ export function BaseMapsVisualizationProvider() {
 
       this._opensearchDashboardsMap.addLegendControl();
       this._opensearchDashboardsMap.addFitControl();
+      this._opensearchDashboardsMap.addLayerControl();
       this._opensearchDashboardsMap.persistUiStateForVisualization(this.vis);
 
       this._opensearchDashboardsMap.on('baseLayer:loaded', () => {
