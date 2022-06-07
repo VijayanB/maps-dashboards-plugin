@@ -31,6 +31,8 @@
  */
 
 import { EventEmitter } from 'events';
+import ReactDOM from 'react-dom'
+import React from 'react'
 import {
   createZoomWarningMsg,
   createRegionBlockedWarning,
@@ -43,6 +45,30 @@ import { i18n } from '@osd/i18n';
 import { ORIGIN } from '../common/constants/origin';
 import { getToasts } from '../maps_explorer_dashboards_services';
 import { L } from '../leaflet';
+import { LayerControlPanel } from '../components/layer_control_panel';
+
+function makeLayerControl(layerContainer, opensearchDashboardsMap) {
+  // eslint-disable-next-line no-undef
+  const LayerControl = L.Control.extend({
+    options: {
+      position: 'topright',
+    },
+    initialize: function (layerContainer, opensearchDashboardsMap) {
+      this._layerContainer = layerContainer;
+      this._opensearchDashboardsMap = opensearchDashboardsMap;
+    },
+    onAdd: function () {
+      console.log("layerControl onAdd");
+      ReactDOM.render(<LayerControlPanel />, this._layerContainer)
+      return this._layerContainer;
+    },
+    onRemove: function () {
+      console.log("layerControl onRemove");
+    },
+  });
+
+  return new LayerControl(layerContainer, opensearchDashboardsMap);
+}
 
 function makeFitControl(fitContainer, opensearchDashboardsMap) {
   // eslint-disable-next-line no-undef
@@ -129,6 +155,7 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     this._baseLayerIsDesaturated = true;
 
     this._leafletDrawControl = null;
+    this._leafletLayerControl = null;
     this._leafletFitControl = null;
     this._leafletLegendControl = null;
     this._legendPosition = 'topright';
@@ -499,6 +526,17 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     // eslint-disable-next-line no-undef
     this._leafletDrawControl = new L.Control.Draw(drawOptions);
     this._leafletMap.addControl(this._leafletDrawControl);
+  }
+
+  addLayerControl() {
+    if (this._leafletLayerControl || !this._leafletMap) {
+      return;
+    }
+
+    // eslint-disable-next-line no-undef
+    const layerContainer = L.DomUtil.create('div');
+    this._leafletLayerControl = makeLayerControl(layerContainer, this);
+    this._leafletMap.addControl(this._leafletLayerControl);
   }
 
   addFitControl() {
