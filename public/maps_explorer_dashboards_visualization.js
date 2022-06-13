@@ -212,7 +212,7 @@ export const createVisualization = (dependencies) => {
     async _updateParams() {
       await super._updateParams();
 
-      this._opensearchDashboardsMap.setDesaturateBaseLayer(this._params.isDesaturated);
+      this._opensearchDashboardsMap.setDesaturate(this._params.isDesaturated);
 
       //avoid recreating the leaflet layer when there are option-changes that do not effect the representation
       //e.g. tooltip-visibility, legend position, basemap-desaturation, ...

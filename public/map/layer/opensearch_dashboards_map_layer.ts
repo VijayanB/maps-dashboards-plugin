@@ -33,6 +33,10 @@
 import { EventEmitter } from 'events';
 
 export class OpenSearchDashboardsMapLayer extends EventEmitter {
+
+  _leafletLayer: any;
+  _attribution: any;
+  
   constructor() {
     super();
     this._leafletLayer = null;
@@ -42,11 +46,11 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
     return this._leafletLayer.getBounds();
   }
 
-  addToLeafletMap(leafletMap) {
+  addToLeafletMap(leafletMap: any) {
     this._leafletLayer.addTo(leafletMap);
   }
 
-  removeFromLeafletMap(leafletMap) {
+  removeFromLeafletMap(leafletMap: any) {
     leafletMap.removeLayer(this._leafletLayer);
   }
 
@@ -59,4 +63,11 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
   getAttributions() {
     return this._attribution;
   }
+
+  /**
+   * Update the layer's desaturated status
+   * @param isDesaturated 
+   * @returns 
+   */
+  setDesaturate(isDesaturated: boolean) {}
 }
