@@ -142,7 +142,7 @@ export function BaseMapsVisualizationProvider() {
     }
 
     /**
-     * Create tmeLayer
+     * Create tmsLayer
      * @param {*} tmsLayerOptions 
      */
     async _setTmsLayer(tmsLayerOptions) {
@@ -166,9 +166,9 @@ export function BaseMapsVisualizationProvider() {
       const options = { ...tmsLayerOptions, showZoomMessage, ...meta };
       // delete options.id;
       delete options.subdomains;
-      // create a new TmsLayer and add it to layers
-      const { TmsLayer } = await import('./layer/tms_layer/tms_layer');
-      const tmsLayer = new TmsLayer(options, this._opensearchDashboardsMap, this.L);
+      // create a new TMSLayer and add it to layers
+      const { TMSLayer } = await import('./layer/tms_layer/tms_layer');
+      const tmsLayer = new TMSLayer(options, this._opensearchDashboardsMap, this.L);
       this._opensearchDashboardsMap.addLayer(tmsLayer);
     }
 

@@ -13,7 +13,7 @@ import { ORIGIN } from '../../../common/constants/origin';
 /**
  * Construct TmsLayer
  */
-export class TmsLayer extends OpenSearchDashboardsMapLayer {
+export class TMSLayer extends OpenSearchDashboardsMapLayer {
     _options;
     _opensearchDashboardsMap;
     _leaflet;
