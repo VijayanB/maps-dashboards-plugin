@@ -35,18 +35,21 @@ import ReactDOM from 'react-dom'
 import React from 'react'
 import {
   createZoomWarningMsg,
-  createRegionBlockedWarning,
-  removeRegionBlockedWarning,
 } from './map_messages';
 import $ from 'jquery';
-import { get, isEqual, escape } from 'lodash';
 import { zoomToPrecision } from './zoom_to_precision';
 import { i18n } from '@osd/i18n';
-import { ORIGIN } from '../common/constants/origin';
 import { getToasts } from '../maps_explorer_dashboards_services';
 import { L } from '../leaflet';
 import { LayerControlPanel } from '../components/layer_control_panel';
 
+
+/**
+ * Add makeLayerControl() to control the layer panel
+ * @param {*} layerContainer 
+ * @param {*} opensearchDashboardsMap 
+ * @returns 
+ */
 function makeLayerControl(layerContainer, opensearchDashboardsMap) {
   // eslint-disable-next-line no-undef
   const LayerControl = L.Control.extend({
@@ -57,13 +60,30 @@ function makeLayerControl(layerContainer, opensearchDashboardsMap) {
       this._layerContainer = layerContainer;
       this._opensearchDashboardsMap = opensearchDashboardsMap;
     },
+
+    // generate a list to store every layer's ID in layers
+    _generateLayerMetadata(opensearchDashboardsMap) {
+      return opensearchDashboardsMap._layers.map((layer) => {
+        return {
+          id: layer._options?.id
+        }
+      })
+    },
+
+    _updateLayerPanel() {
+      ReactDOM.unmountComponentAtNode(layerContainer);
+      ReactDOM.render(<LayerControlPanel layers={this._generateLayerMetadata(opensearchDashboardsMap)} />, layerContainer)
+    },
+
     onAdd: function () {
-      console.log("layerControl onAdd");
-      ReactDOM.render(<LayerControlPanel />, this._layerContainer)
+      this._updateLayerPanel();
+      this._layerUpdateHandle = () => this._updateLayerPanel();
+      this._opensearchDashboardsMap.on('layers:update', this._layerUpdateHandle);
       return this._layerContainer;
     },
     onRemove: function () {
-      console.log("layerControl onRemove");
+      this._opensearchDashboardsMap.removeListener('layers:update', this._layerUpdateHandle);
+      ReactDOM.unmountComponentAtNode(this._layerContainer);
     },
   });
 
@@ -150,9 +170,6 @@ export class OpenSearchDashboardsMap extends EventEmitter {
   constructor(containerNode, options) {
     super();
     this._containerNode = containerNode;
-    this._leafletBaseLayer = null;
-    this._baseLayerSettings = null;
-    this._baseLayerIsDesaturated = true;
 
     this._leafletDrawControl = null;
     this._leafletLayerControl = null;
@@ -347,9 +364,6 @@ export class OpenSearchDashboardsMap extends EventEmitter {
 
     //must readd all attributions, because we might have removed dupes
     this._layers.forEach((layer) => this._addAttributions(layer.getAttributions()));
-    if (this._baseLayerSettings) {
-      this._addAttributions(this._baseLayerSettings.options.attribution);
-    }
   }
 
   _addAttributions(attribution) {
@@ -377,7 +391,6 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     if (this._leafletLegendControl) {
       this._leafletMap.removeControl(this._leafletLegendControl);
     }
-    this.setBaseLayer(null);
     let layer;
     while (this._layers.length) {
       layer = this._layers.pop();
@@ -491,15 +504,8 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     };
   }
 
-  setDesaturateBaseLayer(isDesaturated) {
-    if (isDesaturated === this._baseLayerIsDesaturated) {
-      return;
-    }
-    this._baseLayerIsDesaturated = isDesaturated;
-    this._updateDesaturation();
-    if (this._leafletBaseLayer) {
-      this._leafletBaseLayer.redraw();
-    }
+  setDesaturate(isDesaturated) {
+    this._layers.forEach((layer) => layer.setDesaturate(isDesaturated));
   }
 
   addDrawControl() {
@@ -532,11 +538,7 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     if (this._leafletLayerControl || !this._leafletMap) {
       return;
     }
-
-    // eslint-disable-next-line no-undef
-    const layerContainer = L.DomUtil.create('div');
-    this._leafletLayerControl = makeLayerControl(layerContainer, this);
-    this._leafletMap.addControl(this._leafletLayerControl);
+    this._updateLayerControl();
   }
 
   addFitControl() {
@@ -584,6 +586,17 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     }
   }
 
+  _updateLayerControl() {
+    if (this._leafletLayerControl) {
+      this._leafletMap.removeControl(this._leafletLayerControl);
+    }
+
+    // eslint-disable-next-line no-undef
+    const layerContainer = L.DomUtil.create('div');
+    this._leafletLayerControl = makeLayerControl(layerContainer, this);
+    this._leafletMap.addControl(this._leafletLayerControl);
+  }
+
   _updateLegend() {
     if (this._leafletLegendControl) {
       this._leafletMap.removeControl(this._leafletLegendControl);
@@ -604,70 +617,6 @@ export class OpenSearchDashboardsMap extends EventEmitter {
 
   setMaxZoom(zoom) {
     this._leafletMap.setMaxZoom(zoom);
-  }
-
-  getLeafletBaseLayer() {
-    return this._leafletBaseLayer;
-  }
-
-  setBaseLayer(settings) {
-    if (isEqual(settings, this._baseLayerSettings)) {
-      return;
-    }
-
-    if (settings === null) {
-      if (this._leafletBaseLayer && this._leafletMap) {
-        this._removeAttributions(this._baseLayerSettings.options.attribution);
-        this._leafletMap.removeLayer(this._leafletBaseLayer);
-        this._leafletBaseLayer = null;
-        this._baseLayerSettings = null;
-      }
-      return;
-    }
-
-    this._baseLayerSettings = settings;
-    if (this._leafletBaseLayer) {
-      this._leafletMap.removeLayer(this._leafletBaseLayer);
-      this._leafletBaseLayer = null;
-    }
-
-    let baseLayer;
-    if (settings.baseLayerType === 'wms') {
-      //This is user-input that is rendered with the Leaflet attribution control. Needs to be sanitized.
-      this._baseLayerSettings.options.attribution = escape(settings.options.attribution);
-      baseLayer = this._getWMSBaseLayer(settings.options);
-    } else if (settings.baseLayerType === 'tms') {
-      baseLayer = this._getTMSBaseLayer(settings.options);
-    }
-
-    if (baseLayer) {
-      baseLayer.on('tileload', () => this._updateDesaturation());
-      baseLayer.on('load', () => {
-        this.emit('baseLayer:loaded');
-      });
-      baseLayer.on('loading', () => {
-        this.emit('baseLayer:loading');
-      });
-      baseLayer.on('tileerror', () => {
-        if (settings.options.showRegionBlockedWarning) {
-          createRegionBlockedWarning();
-        }
-      });
-
-      this._leafletBaseLayer = baseLayer;
-      if (settings.options.showZoomMessage) {
-        baseLayer.on('add', () => {
-          this._addMaxZoomMessage(baseLayer);
-        });
-      }
-      this._leafletBaseLayer.addTo(this._leafletMap);
-      this._leafletBaseLayer.bringToBack();
-      if (settings.options.minZoom > this._leafletMap.getZoom()) {
-        this._leafletMap.setZoom(settings.options.minZoom);
-      }
-      this._addAttributions(settings.options.attribution);
-      this.resize();
-    }
   }
 
   isInside(bucketRectBounds) {
@@ -700,49 +649,8 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     }
   }
 
-  _getTMSBaseLayer(options) {
-    // eslint-disable-next-line no-undef
-    return L.tileLayer(options.url, {
-      minZoom: options.minZoom,
-      maxZoom: options.maxZoom,
-      subdomains: options.subdomains || [],
-    });
-  }
-
-  _getWMSBaseLayer(options) {
-    const wmsOptions = {
-      format: options.format || '',
-      layers: options.layers || '',
-      minZoom: options.minZoom,
-      maxZoom: options.maxZoom,
-      styles: options.styles || '',
-      transparent: options.transparent,
-      version: options.version || '1.3.0',
-    };
-
-    return typeof options.url === 'string' && options.url.length
-      ? // eslint-disable-next-line no-undef
-        L.tileLayer.wms(options.url, wmsOptions)
-      : null;
-  }
-
   _updateExtent() {
     this._layers.forEach((layer) => layer.updateExtent());
-  }
-
-  _updateDesaturation() {
-    removeRegionBlockedWarning();
-    const tiles = $('img.leaflet-tile-loaded');
-    // Don't apply client-side styling to EMS basemaps
-    if (get(this._baseLayerSettings, 'options.origin') === ORIGIN.EMS) {
-      tiles.addClass('filters-off');
-    } else {
-      if (this._baseLayerIsDesaturated) {
-        tiles.removeClass('filters-off');
-      } else if (!this._baseLayerIsDesaturated) {
-        tiles.addClass('filters-off');
-      }
-    }
   }
 
   persistUiStateForVisualization(visualization) {

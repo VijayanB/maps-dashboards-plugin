@@ -31,8 +31,6 @@
  */
 
 import { i18n } from '@osd/i18n';
-import * as Rx from 'rxjs';
-import { filter, first } from 'rxjs/operators';
 import { getEmsTileLayerId, getUiSettings, getToasts } from '../maps_explorer_dashboards_services';
 import { lazyLoadMapsExplorerDashboardsModules } from '../lazy_load_bundle';
 import { getServiceSettings } from '../get_service_settings';
@@ -42,7 +40,7 @@ const WMS_MAXZOOM = 22; //increase this to 22. Better for WMS
 
 export function BaseMapsVisualizationProvider() {
   /**
-   * Abstract base class for a visualization consisting of a map with a single baselayer.
+   * Abstract base class for a visualization consisting of a map with a single TMS Layer.
    * @class BaseMapsVisualization
    * @constructor
    */
@@ -52,7 +50,6 @@ export function BaseMapsVisualizationProvider() {
       this._container = element;
       this._opensearchDashboardsMap = null;
       this._chartData = null; //reference to data currently on the map.
-      this._baseLayerDirty = true;
       this._mapIsLoaded = this._makeOpenSearchDashboardsMap();
     }
 
@@ -89,12 +86,10 @@ export function BaseMapsVisualizationProvider() {
         await this._updateData(opensearchResponse);
       }
       this._opensearchDashboardsMap.useUiStateFromVisualization(this.vis);
-
-      await this._whenBaseLayerIsLoaded();
     }
 
     /**
-     * Creates an instance of a opensearch-dashboards-map with a single baselayer and assigns it to the this._opensearchDashboardsMap property.
+     * Creates an instance of a opensearch-dashboards-map with a single TMS layer and assigns it to the this._opensearchDashboardsMap property.
      * Clients can override this method to customize the initialization.
      * @private
      */
@@ -107,6 +102,7 @@ export function BaseMapsVisualizationProvider() {
       options.center = centerFromUIState ? centerFromUIState : this.vis.params.mapCenter;
 
       const modules = await lazyLoadMapsExplorerDashboardsModules();
+      this.L = modules.L;
       this._opensearchDashboardsMap = new modules.OpenSearchDashboardsMap(this._container, options);
       this._opensearchDashboardsMap.setMinZoom(WMS_MINZOOM); //use a default
       this._opensearchDashboardsMap.setMaxZoom(WMS_MAXZOOM); //use a default
@@ -115,86 +111,45 @@ export function BaseMapsVisualizationProvider() {
       this._opensearchDashboardsMap.addFitControl();
       this._opensearchDashboardsMap.addLayerControl();
       this._opensearchDashboardsMap.persistUiStateForVisualization(this.vis);
-
-      this._opensearchDashboardsMap.on('baseLayer:loaded', () => {
-        this._baseLayerDirty = false;
-      });
-      this._opensearchDashboardsMap.on('baseLayer:loading', () => {
-        this._baseLayerDirty = true;
-      });
-      await this._updateBaseLayer();
+      await this._makeTmsLayer();
     }
 
-    _tmsConfigured() {
-      const { wms } = this._getMapsParams();
-      const hasTmsBaseLayer = wms && !!wms.selectedTmsLayer;
-
-      return hasTmsBaseLayer;
-    }
-
-    _wmsConfigured() {
-      const { wms } = this._getMapsParams();
-      const hasWmsBaseLayer = wms && !!wms.enabled;
-
-      return hasWmsBaseLayer;
-    }
-
-    async _updateBaseLayer() {
+    /**
+     * Initialize the map layer
+     * @returns 
+     */
+    async _makeTmsLayer() {
       const emsTileLayerId = getEmsTileLayerId();
 
       if (!this._opensearchDashboardsMap) {
         return;
       }
-
-      const mapParams = this._getMapsParams();
-      if (!this._tmsConfigured()) {
-        try {
-          const serviceSettings = await getServiceSettings();
-          const tmsServices = await serviceSettings.getTMSServices();
-          const userConfiguredTmsLayer = tmsServices[0];
-          const initBasemapLayer = userConfiguredTmsLayer
-            ? userConfiguredTmsLayer
-            : tmsServices.find((s) => s.id === emsTileLayerId.bright);
-          if (initBasemapLayer) {
-            this._setTmsLayer(initBasemapLayer);
-          }
-        } catch (e) {
-          getToasts().addWarning(e.message);
-          return;
+      try {
+        const serviceSettings = await getServiceSettings();
+        const tmsServices = await serviceSettings.getTMSServices();
+        const userConfiguredTmsLayer = tmsServices[0];
+        const initMapLayer = userConfiguredTmsLayer
+          ? userConfiguredTmsLayer
+          : tmsServices.find((s) => s.id === emsTileLayerId.bright);
+        if (initMapLayer) {
+          this._setTmsLayer(initMapLayer);
         }
+      } catch (e) {
+        getToasts().addWarning(e.message);
         return;
       }
-
-      try {
-        if (this._wmsConfigured()) {
-          if (WMS_MINZOOM > this._opensearchDashboardsMap.getMaxZoomLevel()) {
-            this._opensearchDashboardsMap.setMinZoom(WMS_MINZOOM);
-            this._opensearchDashboardsMap.setMaxZoom(WMS_MAXZOOM);
-          }
-
-          this._opensearchDashboardsMap.setBaseLayer({
-            baseLayerType: 'wms',
-            options: {
-              minZoom: WMS_MINZOOM,
-              maxZoom: WMS_MAXZOOM,
-              url: mapParams.wms.url,
-              ...mapParams.wms.options,
-            },
-          });
-        } else if (this._tmsConfigured()) {
-          const selectedTmsLayer = mapParams.wms.selectedTmsLayer;
-          this._setTmsLayer(selectedTmsLayer);
-        }
-      } catch (tmsLoadingError) {
-        getToasts().addWarning(tmsLoadingError.message);
-      }
+      return;
     }
 
-    async _setTmsLayer(tmsLayer) {
-      this._opensearchDashboardsMap.setMinZoom(tmsLayer.minZoom);
-      this._opensearchDashboardsMap.setMaxZoom(tmsLayer.maxZoom);
-      if (this._opensearchDashboardsMap.getZoomLevel() > tmsLayer.maxZoom) {
-        this._opensearchDashboardsMap.setZoomLevel(tmsLayer.maxZoom);
+    /**
+     * Create tmeLayer
+     * @param {*} tmsLayerOptions 
+     */
+    async _setTmsLayer(tmsLayerOptions) {
+      this._opensearchDashboardsMap.setMinZoom(tmsLayerOptions.minZoom);
+      this._opensearchDashboardsMap.setMaxZoom(tmsLayerOptions.maxZoom);
+      if (this._opensearchDashboardsMap.getZoomLevel() > tmsLayerOptions.maxZoom) {
+        this._opensearchDashboardsMap.setZoomLevel(tmsLayerOptions.maxZoom);
       }
       let isDesaturated = this._getMapsParams().isDesaturated;
       if (typeof isDesaturated !== 'boolean') {
@@ -203,18 +158,18 @@ export function BaseMapsVisualizationProvider() {
       const isDarkMode = getUiSettings().get('theme:darkMode');
       const serviceSettings = await getServiceSettings();
       const meta = await serviceSettings.getAttributesForTMSLayer(
-        tmsLayer,
+        tmsLayerOptions,
         isDesaturated,
         isDarkMode
       );
-      const showZoomMessage = serviceSettings.shouldShowZoomMessage(tmsLayer);
-      const options = { ...tmsLayer };
-      delete options.id;
+      const showZoomMessage = serviceSettings.shouldShowZoomMessage(tmsLayerOptions);
+      const options = { ...tmsLayerOptions, showZoomMessage, ...meta };
+      // delete options.id;
       delete options.subdomains;
-      this._opensearchDashboardsMap.setBaseLayer({
-        baseLayerType: 'tms',
-        options: { ...options, showZoomMessage, ...meta },
-      });
+      // create a new TmsLayer and add it to layers
+      const { TmsLayer } = await import('./layer/tms_layer/tms_layer');
+      const tmsLayer = new TmsLayer(options, this._opensearchDashboardsMap, this.L);
+      this._opensearchDashboardsMap.addLayer(tmsLayer);
     }
 
     async _updateData() {
@@ -234,7 +189,6 @@ export function BaseMapsVisualizationProvider() {
      */
     async _updateParams() {
       const mapParams = this._getMapsParams();
-      await this._updateBaseLayer();
       this._opensearchDashboardsMap.setLegendPosition(mapParams.legendPosition);
       this._opensearchDashboardsMap.setShowTooltip(mapParams.addTooltip);
       this._opensearchDashboardsMap.useUiStateFromVisualization(this.vis);
@@ -246,18 +200,6 @@ export function BaseMapsVisualizationProvider() {
         type: this.vis.type.name,
         ...this._params,
       };
-    }
-
-    _whenBaseLayerIsLoaded() {
-      if (!this._tmsConfigured()) {
-        return true;
-      }
-
-      const maxTimeForBaseLayer = 10000;
-      const interval$ = Rx.interval(10).pipe(filter(() => !this._baseLayerDirty));
-      const timer$ = Rx.timer(maxTimeForBaseLayer);
-
-      return Rx.race(interval$, timer$).pipe(first()).toPromise();
     }
   };
 }
