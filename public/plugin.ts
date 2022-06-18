@@ -101,7 +101,7 @@ export class MapsExplorerDashboardsPlugin
   
     bindSetupCoreAndPlugins(core, config, opensearchDashboards);
 
-    expressions.registerFunction(createMapsExplorerDashboardsFn);
+    expressions.registerFunction(() => createMapsExplorerDashboardsFn());
 
     visualizations.createBaseVisualization(
       createMapsExplorerDashboardsVisTypeDefinition(visualizationDependencies)

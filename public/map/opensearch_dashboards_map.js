@@ -62,17 +62,15 @@ function makeLayerControl(layerContainer, opensearchDashboardsMap) {
     },
 
     // generate a list to store every layer's ID in layers
-    _generateLayerMetadata(opensearchDashboardsMap) {
+    _generateLayerOptions(opensearchDashboardsMap) {
       return opensearchDashboardsMap._layers.map((layer) => {
-        return {
-          id: layer._options?.id
-        }
+        return layer.getOptions();
       })
     },
 
     _updateLayerPanel() {
       ReactDOM.unmountComponentAtNode(layerContainer);
-      ReactDOM.render(<LayerControlPanel layers={this._generateLayerMetadata(opensearchDashboardsMap)} />, layerContainer)
+      ReactDOM.render(<LayerControlPanel layers={this._generateLayerOptions(opensearchDashboardsMap)} />, layerContainer)
     },
 
     onAdd: function () {
@@ -175,7 +173,7 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     this._leafletLayerControl = null;
     this._leafletFitControl = null;
     this._leafletLegendControl = null;
-    this._legendPosition = 'topright';
+    this._legendPosition = 'bottomright';
 
     this._layers = [];
     this._listeners = [];
@@ -287,6 +285,15 @@ export class OpenSearchDashboardsMap extends EventEmitter {
   }
 
   addLayer(opensearchDashboardsLayer) {
+    this.addLayer(opensearchDashboardsLayer, undefined);
+  }
+
+  /**
+   * Add new layer and listen to this layer
+   * @param {*} opensearchDashboardsLayer 
+   * @param {*} index 
+   */
+  addLayer(opensearchDashboardsLayer, index) {
     const onshowTooltip = (event) => {
       if (!this._showTooltip) {
         return;
@@ -338,7 +345,22 @@ export class OpenSearchDashboardsMap extends EventEmitter {
       layer: opensearchDashboardsLayer,
     });
 
-    this._layers.push(opensearchDashboardsLayer);
+    const onLayerUpdate = () => {
+      this.emit('layers:update');
+    };
+    opensearchDashboardsLayer.on('layer:update', onLayerUpdate);
+    this._listeners.push({
+      name: 'layer:update',
+      handle: onHideTooltip,
+      layer: opensearchDashboardsLayer,
+    });
+
+    if (index) {
+      this._layers.splice(index, 0, opensearchDashboardsLayer);
+    } else {
+      this._layers.push(opensearchDashboardsLayer);
+    }
+
     opensearchDashboardsLayer.addToLeafletMap(this._leafletMap);
     this.emit('layers:update');
 
@@ -538,7 +560,15 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     if (this._leafletLayerControl || !this._leafletMap) {
       return;
     }
-    this._updateLayerControl();
+
+    if (this._leafletLayerControl) {
+      this._leafletMap.removeControl(this._leafletLayerControl);
+    }
+
+    // eslint-disable-next-line no-undef
+    const layerContainer = L.DomUtil.create('div');
+    this._leafletLayerControl = makeLayerControl(layerContainer, this);
+    this._leafletMap.addControl(this._leafletLayerControl);
   }
 
   addFitControl() {
@@ -584,17 +614,6 @@ export class OpenSearchDashboardsMap extends EventEmitter {
       this._legendPosition = position;
       this._updateLegend();
     }
-  }
-
-  _updateLayerControl() {
-    if (this._leafletLayerControl) {
-      this._leafletMap.removeControl(this._leafletLayerControl);
-    }
-
-    // eslint-disable-next-line no-undef
-    const layerContainer = L.DomUtil.create('div');
-    this._leafletLayerControl = makeLayerControl(layerContainer, this);
-    this._leafletMap.addControl(this._leafletLayerControl);
   }
 
   _updateLegend() {

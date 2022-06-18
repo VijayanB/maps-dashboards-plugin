@@ -31,15 +31,20 @@
  */
 
 import { EventEmitter } from 'events';
+import { LayerOptions } from '../../common/types';
 
 export class OpenSearchDashboardsMapLayer extends EventEmitter {
 
   _leafletLayer: any;
   _attribution: any;
+  _options: LayerOptions;
+  _opensearchDashboardsMap: any;
   
-  constructor() {
+  constructor(opensearchDashboardsMap: any, options: LayerOptions) {
     super();
     this._leafletLayer = null;
+    this._options = options;
+    this._opensearchDashboardsMap = opensearchDashboardsMap;
   }
 
   async getBounds() {
@@ -70,4 +75,28 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
    * @returns 
    */
   setDesaturate(isDesaturated: boolean) {}
+
+  /**
+   * Check whether the new optoin requires a re-creation of the layer,
+   * if true, opensearch dashboard map will not re-create the layer,
+   * otherwise, opensearch dashboard map will re-create the layer.
+   * @param option The option that is specific for the layer
+   * @returns 
+   */
+  isReusable(option: any) {
+    return false;
+  }
+
+  /**
+   * Update layer's options
+   * @param options The option that is specific for the layer
+   */
+  updateOptions(options: LayerOptions) {
+    this._options = options;
+    this.emit('layer:update');
+  }
+
+  getOptions() {
+    return this._options;
+  }
 }

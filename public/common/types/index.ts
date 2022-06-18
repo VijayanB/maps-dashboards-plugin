@@ -37,3 +37,4 @@
 export * from './external_basemap_types';
 export * from './map_types';
 export * from './region_map_types';
+export * from './layer';

@@ -85,4 +85,13 @@ export class TMSLayer extends OpenSearchDashboardsMapLayer {
         }
     }
 
+    /**
+     * Depedning on the passing in options, 
+     * whether updateOptions or recreate new layer
+     * @param option 
+     * @returns 
+     */
+    isReusable(option: any): boolean {
+        return true;
+    }
 }

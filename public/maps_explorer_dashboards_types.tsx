@@ -4,11 +4,11 @@ import { convertToGeoJson } from '.';
 import { truncatedColorSchemas } from '../../../src/plugins/charts/public';
 import { Vis } from '../../../src/plugins/visualizations/public';
 import { MapsExplorerDashboardsVisualizationDependencies } from './plugin';
-import { createVisualization } from './maps_explorer_dashboards_visualization';
+import { LayerTypes } from './common/types';
+import { MapExplorerOptions, MapsExlorerOptionsProps } from './components/maps_explorer_options';
 
 export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: MapsExplorerDashboardsVisualizationDependencies) => {
   const { uiSettings, getServiceSettings } = dependencies;
-  const visualization = createVisualization(dependencies);
 
   return {
     name: 'maps_explorer_dashboards',
@@ -22,28 +22,38 @@ export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: Maps
     }),
     visConfig: {
       defaults: {
-        colorSchema: 'Yellow to Red',
-        mapType: 'Scaled Circle Markers',
-        isDesaturated: true,
-        addTooltip: true,
-        heatClusterSize: 1.5,
-        legendPosition: 'bottomright',
-        mapZoom: 2,
-        mapCenter: [0, 0],
-        wms: uiSettings.get('visualization:tileMap:WMSdefaults'),
+        layersOptions: {
+          default_layer: {
+            id: "default_layer",
+            name: "Default Layer",
+            layerType: LayerTypes.TMSLayer,
+          }
+        },
+        curLayerId: "default_layer",
+        layerIdOrder: ["default_layer"]
       }
     },
-    visualization,
+    visualization: dependencies.BaseMapsVisualization,
     responseHandler: convertToGeoJson,
     editorConfig: {
-      hideSidebar: true,
-      optionsTemplate: () => (
-        null
-      ),
+      hideSidebar: false,
+      optionsTemplate: (props: MapsExlorerOptionsProps) => <MapExplorerOptions {...props} />,
       collections: {
         colorSchemas: truncatedColorSchemas,
-        vectorLayers: [],
-        tmsLayers: [],
+        layerTypes: [
+          {
+            value: LayerTypes.TMSLayer,
+            text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.tmsLayerText', {
+              defaultMessage: 'TMS Layer',
+            }),
+          },
+          {
+            value: LayerTypes.GeohashLayer,
+            text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.geohashLayerText', {
+              defaultMessage: 'Geohash Layer',
+            }),
+          },
+        ],
       },
     },
     setup: async (vis: Vis) => {
