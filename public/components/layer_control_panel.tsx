@@ -7,32 +7,20 @@ import React from 'react';
 import { EuiPanel, EuiSpacer, EuiTitle } from '@elastic/eui';
 import { FormattedMessage, I18nProvider } from '@osd/i18n/react';
 import './layer_control_panel.scss';
+import { LayerOptions } from '../common/types';
 
-interface LayerMetadata {
-  id: string;
-  name: string;
-}
-
+/**
+ * LayerControlPanelProps have all layers' LayerOptions as a list
+ */
 interface LayerControlPanelProps {
-  layers: LayerMetadata[],
+  layers: LayerOptions[],
 }
 
 /**
- * Get layer's name or layer's ID to display
- * Otherwise, display "unnamed Layer" as placeholder
- * @param layerMetadata 
+ * Layer Control Panel UI
+ * @param props 
  * @returns 
  */
-function getLayerDisplayName(layerMetadata: LayerMetadata) {
-  if (layerMetadata.name) {
-    return layerMetadata.name;
-  } else if (layerMetadata.id) {
-    return layerMetadata.id;
-  } else {
-    return "Unnamed Layer";
-  }
-}
-
 function LayerControlPanel(props: LayerControlPanelProps) {
   return (
     <I18nProvider>
@@ -46,23 +34,28 @@ function LayerControlPanel(props: LayerControlPanelProps) {
           </h2>
         </EuiTitle>
         <EuiSpacer size="s" />
-        {props.layers.map(
-          (layerMetadata, idx) => {
-            return (
-              <LayerControlPanelItem key={"layer" + idx} metadata={layerMetadata} />
-            )
-          })}
+        <div>
+          {props.layers.map(
+            (layerOptions) => {
+              return (
+                <LayerControlPanelItem options={layerOptions} />
+              )
+            })}
+        </div>
       </EuiPanel>
     </I18nProvider>
   );
 }
 
+/**
+ * Every item in layer control panel has a layer's LayerOptions
+ */
 interface LayerControlPanelItemProps {
-  metadata: LayerMetadata,
+  options: LayerOptions,
 }
 
 /**
- * Create new layer item
+ * Every Layer control panel item dispalys layer's name
  * Could add future (edit/delete/hide)buttons
  * @param props 
  * @returns 
@@ -70,10 +63,10 @@ interface LayerControlPanelItemProps {
 function LayerControlPanelItem(props: LayerControlPanelItemProps) {
   return (
     <>
-      <span>{getLayerDisplayName(props.metadata)}</span>
-      <EuiSpacer size="s" />
+      <span key={props.options.id + '_name'}>{props.options.name}</span>
+      <EuiSpacer key={props.options.id + '_spacer'} size="s" />
     </>
   )
 }
 
-export { LayerMetadata, LayerControlPanel };
+export { LayerOptions, LayerControlPanel };

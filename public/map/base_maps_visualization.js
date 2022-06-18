@@ -34,6 +34,7 @@ import { i18n } from '@osd/i18n';
 import { getEmsTileLayerId, getUiSettings, getToasts } from '../maps_explorer_dashboards_services';
 import { lazyLoadMapsExplorerDashboardsModules } from '../lazy_load_bundle';
 import { getServiceSettings } from '../get_service_settings';
+import { LayerTypes } from '../common/types/layer';
 
 const WMS_MINZOOM = 0;
 const WMS_MAXZOOM = 22; //increase this to 22. Better for WMS
@@ -51,6 +52,8 @@ export function BaseMapsVisualizationProvider() {
       this._opensearchDashboardsMap = null;
       this._chartData = null; //reference to data currently on the map.
       this._mapIsLoaded = this._makeOpenSearchDashboardsMap();
+      this._layers = {} // layers id mapping to layer instance
+      this._layerCounter = 0;
     }
 
     isLoaded() {
@@ -86,6 +89,7 @@ export function BaseMapsVisualizationProvider() {
         await this._updateData(opensearchResponse);
       }
       this._opensearchDashboardsMap.useUiStateFromVisualization(this.vis);
+      await this._updateLayers();
     }
 
     /**
@@ -111,14 +115,41 @@ export function BaseMapsVisualizationProvider() {
       this._opensearchDashboardsMap.addFitControl();
       this._opensearchDashboardsMap.addLayerControl();
       this._opensearchDashboardsMap.persistUiStateForVisualization(this.vis);
-      await this._makeTmsLayer();
+      await this._updateLayers();
     }
 
     /**
-     * Initialize the map layer
-     * @returns 
+     * Update layers with new params
      */
-    async _makeTmsLayer() {
+    async _updateLayers() {
+      const { layersOptions, curLayerIndex, layerIdOrder } = this._getMapsParams();
+
+      layerIdOrder.forEach(async (id, idx) => {
+        let newOptions = {};
+        const layerOptions = layersOptions[id];
+        switch (layerOptions.layerType) {
+          case LayerTypes.TMSLayer: newOptions = await this._getTmsLayerOptions(layerOptions); break;
+          default:
+            throw new Error(
+              i18n.translate('mapExplorerDashboard.layerType.unsupportedErrorMessage', {
+                defaultMessage: '{layerType} layer type not recognized',
+                values: {
+                  layerType: layerOptions.layerType,
+                },
+              })
+            );
+        }
+
+        if (!this._layers[id] || !this._layers[id].isReusable(newOptions)
+              || this._layers[id].getOptions().layerType !== newOptions.layerType) {
+            this._recreateTmsLayer(newOptions, idx);
+        } else {
+          this._layers[id].updateOptions(newOptions);
+        }
+      });
+    }
+
+    async _getTmsLayerOptions(options) {
       const emsTileLayerId = getEmsTileLayerId();
 
       if (!this._opensearchDashboardsMap) {
@@ -132,7 +163,27 @@ export function BaseMapsVisualizationProvider() {
           ? userConfiguredTmsLayer
           : tmsServices.find((s) => s.id === emsTileLayerId.bright);
         if (initMapLayer) {
-          this._setTmsLayer(initMapLayer);
+          this._opensearchDashboardsMap.setMinZoom(initMapLayer.minZoom);
+          this._opensearchDashboardsMap.setMaxZoom(initMapLayer.maxZoom);
+          if (this._opensearchDashboardsMap.getZoomLevel() > initMapLayer.maxZoom) {
+            this._opensearchDashboardsMap.setZoomLevel(initMapLayer.maxZoom);
+          }
+          let isDesaturated = this._getMapsParams().isDesaturated;
+          if (typeof isDesaturated !== 'boolean') {
+            isDesaturated = true;
+          }
+          const isDarkMode = getUiSettings().get('theme:darkMode');
+          const serviceSettings = await getServiceSettings();
+          const meta = await serviceSettings.getAttributesForTMSLayer(
+            initMapLayer,
+            isDesaturated,
+            isDarkMode
+          );
+          const showZoomMessage = serviceSettings.shouldShowZoomMessage(initMapLayer);
+          delete initMapLayer.subdomains;
+          delete initMapLayer.id;
+          options = { ...options, ...initMapLayer, showZoomMessage, ...meta };
+          return options;
         }
       } catch (e) {
         getToasts().addWarning(e.message);
@@ -141,43 +192,26 @@ export function BaseMapsVisualizationProvider() {
       return;
     }
 
-    /**
-     * Create tmsLayer
-     * @param {*} tmsLayerOptions 
-     */
-    async _setTmsLayer(tmsLayerOptions) {
-      this._opensearchDashboardsMap.setMinZoom(tmsLayerOptions.minZoom);
-      this._opensearchDashboardsMap.setMaxZoom(tmsLayerOptions.maxZoom);
-      if (this._opensearchDashboardsMap.getZoomLevel() > tmsLayerOptions.maxZoom) {
-        this._opensearchDashboardsMap.setZoomLevel(tmsLayerOptions.maxZoom);
-      }
-      let isDesaturated = this._getMapsParams().isDesaturated;
-      if (typeof isDesaturated !== 'boolean') {
-        isDesaturated = true;
-      }
-      const isDarkMode = getUiSettings().get('theme:darkMode');
-      const serviceSettings = await getServiceSettings();
-      const meta = await serviceSettings.getAttributesForTMSLayer(
-        tmsLayerOptions,
-        isDesaturated,
-        isDarkMode
-      );
-      const showZoomMessage = serviceSettings.shouldShowZoomMessage(tmsLayerOptions);
-      const options = { ...tmsLayerOptions, showZoomMessage, ...meta };
-      // delete options.id;
-      delete options.subdomains;
-      // create a new TMSLayer and add it to layers
+    async _recreateTmsLayer(newOptions, idx) {
       const { TMSLayer } = await import('./layer/tms_layer/tms_layer');
-      const tmsLayer = new TMSLayer(options, this._opensearchDashboardsMap, this.L);
-      this._opensearchDashboardsMap.addLayer(tmsLayer);
+
+      if (this._layers[newOptions.id]) {
+        this._opensearchDashboardsMap.removeLayer(this._layers[newOptions.id]);
+        this._layers[newOptions.id] = null;
+      }
+
+      const tmsLayer = new TMSLayer(newOptions, this._opensearchDashboardsMap, this.L);
+      this._opensearchDashboardsMap.addLayer(tmsLayer, idx);
+      this._layers[newOptions.id] = tmsLayer;
     }
 
     async _updateData() {
-      throw new Error(
-        i18n.translate('maps_legacy.baseMapsVisualization.childShouldImplementMethodErrorMessage', {
-          defaultMessage: 'Child should implement this method to respond to data-update',
-        })
-      );
+      // TODO: remove the error and implement _updateData() in base_map_visualization 
+      // throw new Error(
+      //   i18n.translate('maps_legacy.baseMapsVisualization.childShouldImplementMethodErrorMessage', {
+      //     defaultMessage: 'Child should implement this method to respond to data-update',
+      //   })
+      // );
     }
 
     _hasOpenSearchResponseChanged(data) {
@@ -189,7 +223,7 @@ export function BaseMapsVisualizationProvider() {
      */
     async _updateParams() {
       const mapParams = this._getMapsParams();
-      this._opensearchDashboardsMap.setLegendPosition(mapParams.legendPosition);
+      // this._opensearchDashboardsMap.setLegendPosition(mapParams.legendPosition);
       this._opensearchDashboardsMap.setShowTooltip(mapParams.addTooltip);
       this._opensearchDashboardsMap.useUiStateFromVisualization(this.vis);
     }
@@ -200,6 +234,10 @@ export function BaseMapsVisualizationProvider() {
         type: this.vis.type.name,
         ...this._params,
       };
+    }
+
+    _createNewLayerId() {
+      return 'layer_' + this._layerCounter++;
     }
   };
 }
