@@ -31,8 +31,6 @@
  */
 
 import { EventEmitter } from 'events';
-import ReactDOM from 'react-dom'
-import React from 'react'
 import {
   createZoomWarningMsg,
 } from './map_messages';
@@ -41,52 +39,7 @@ import { zoomToPrecision } from './zoom_to_precision';
 import { i18n } from '@osd/i18n';
 import { getToasts } from '../maps_explorer_dashboards_services';
 import { L } from '../leaflet';
-import { LayerControlPanel } from '../components/layer_control_panel';
 
-
-/**
- * Add makeLayerControl() to control the layer panel
- * @param {*} layerContainer 
- * @param {*} opensearchDashboardsMap 
- * @returns 
- */
-function makeLayerControl(layerContainer, opensearchDashboardsMap) {
-  // eslint-disable-next-line no-undef
-  const LayerControl = L.Control.extend({
-    options: {
-      position: 'topright',
-    },
-    initialize: function (layerContainer, opensearchDashboardsMap) {
-      this._layerContainer = layerContainer;
-      this._opensearchDashboardsMap = opensearchDashboardsMap;
-    },
-
-    // generate a list to store every layer's ID in layers
-    _generateLayerOptions(opensearchDashboardsMap) {
-      return opensearchDashboardsMap._layers.map((layer) => {
-        return layer.getOptions();
-      })
-    },
-
-    _updateLayerPanel() {
-      ReactDOM.unmountComponentAtNode(layerContainer);
-      ReactDOM.render(<LayerControlPanel layers={this._generateLayerOptions(opensearchDashboardsMap)} />, layerContainer)
-    },
-
-    onAdd: function () {
-      this._updateLayerPanel();
-      this._layerUpdateHandle = () => this._updateLayerPanel();
-      this._opensearchDashboardsMap.on('layers:update', this._layerUpdateHandle);
-      return this._layerContainer;
-    },
-    onRemove: function () {
-      this._opensearchDashboardsMap.removeListener('layers:update', this._layerUpdateHandle);
-      ReactDOM.unmountComponentAtNode(this._layerContainer);
-    },
-  });
-
-  return new LayerControl(layerContainer, opensearchDashboardsMap);
-}
 
 function makeFitControl(fitContainer, opensearchDashboardsMap) {
   // eslint-disable-next-line no-undef
@@ -170,7 +123,6 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     this._containerNode = containerNode;
 
     this._leafletDrawControl = null;
-    this._leafletLayerControl = null;
     this._leafletFitControl = null;
     this._leafletLegendControl = null;
     this._legendPosition = 'bottomright';
@@ -554,21 +506,6 @@ export class OpenSearchDashboardsMap extends EventEmitter {
     // eslint-disable-next-line no-undef
     this._leafletDrawControl = new L.Control.Draw(drawOptions);
     this._leafletMap.addControl(this._leafletDrawControl);
-  }
-
-  addLayerControl() {
-    if (this._leafletLayerControl || !this._leafletMap) {
-      return;
-    }
-
-    if (this._leafletLayerControl) {
-      this._leafletMap.removeControl(this._leafletLayerControl);
-    }
-
-    // eslint-disable-next-line no-undef
-    const layerContainer = L.DomUtil.create('div');
-    this._leafletLayerControl = makeLayerControl(layerContainer, this);
-    this._leafletMap.addControl(this._leafletLayerControl);
   }
 
   addFitControl() {

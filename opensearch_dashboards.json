@@ -12,7 +12,8 @@
     "charts",
     "opensearchDashboardsUtils",
     "opensearchDashboardsReact",
-    "opensearchDashboardsLegacy"
+    "opensearchDashboardsLegacy",
+    "visDefaultEditor"
   ],
   "requiredBundles": [
   ]

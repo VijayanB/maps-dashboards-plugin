@@ -1,11 +1,10 @@
-import React from 'react';
 import { i18n } from '@osd/i18n';
 import { convertToGeoJson } from '.';
 import { truncatedColorSchemas } from '../../../src/plugins/charts/public';
 import { Vis } from '../../../src/plugins/visualizations/public';
 import { MapsExplorerDashboardsVisualizationDependencies } from './plugin';
 import { LayerTypes } from './common/types';
-import { MapExplorerOptions, MapsExlorerOptionsProps } from './components/maps_explorer_options';
+import { MapsExplorerEditorController } from './components/maps_explorer_editor_controller';
 
 export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: MapsExplorerDashboardsVisualizationDependencies) => {
   const { uiSettings, getServiceSettings } = dependencies;
@@ -22,22 +21,14 @@ export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: Maps
     }),
     visConfig: {
       defaults: {
-        layersOptions: {
-          default_layer: {
-            id: "default_layer",
-            name: "Default Layer",
-            layerType: LayerTypes.TMSLayer,
-          }
-        },
-        curLayerId: "default_layer",
-        layerIdOrder: ["default_layer"]
+        layersOptions: {},
+        layerIdOrder: []
       }
     },
     visualization: dependencies.BaseMapsVisualization,
     responseHandler: convertToGeoJson,
+    editor: MapsExplorerEditorController,
     editorConfig: {
-      hideSidebar: false,
-      optionsTemplate: (props: MapsExlorerOptionsProps) => <MapExplorerOptions {...props} />,
       collections: {
         colorSchemas: truncatedColorSchemas,
         layerTypes: [
