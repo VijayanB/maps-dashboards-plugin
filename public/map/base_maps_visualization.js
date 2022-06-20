@@ -41,7 +41,7 @@ const WMS_MAXZOOM = 22; //increase this to 22. Better for WMS
 
 export function BaseMapsVisualizationProvider() {
   /**
-   * Abstract base class for a visualization consisting of a map with a single TMS Layer.
+   * Abstract base class for a visualization consisting of a map with a openSearchDashboardsMapLayer.
    * @class BaseMapsVisualization
    * @constructor
    */
@@ -53,7 +53,6 @@ export function BaseMapsVisualizationProvider() {
       this._chartData = null; //reference to data currently on the map.
       this._mapIsLoaded = this._makeOpenSearchDashboardsMap();
       this._layers = {} // layers id mapping to layer instance
-      this._layerCounter = 0;
     }
 
     isLoaded() {
@@ -93,7 +92,7 @@ export function BaseMapsVisualizationProvider() {
     }
 
     /**
-     * Creates an instance of a opensearch-dashboards-map with a single TMS layer and assigns it to the this._opensearchDashboardsMap property.
+     * Creates an instance of a opensearch-dashboards-map with a openSearchDashboardsMapLayer and assigns it to the this._opensearchDashboardsMap property.
      * Clients can override this method to customize the initialization.
      * @private
      */
@@ -113,7 +112,6 @@ export function BaseMapsVisualizationProvider() {
 
       this._opensearchDashboardsMap.addLegendControl();
       this._opensearchDashboardsMap.addFitControl();
-      this._opensearchDashboardsMap.addLayerControl();
       this._opensearchDashboardsMap.persistUiStateForVisualization(this.vis);
       await this._updateLayers();
     }
@@ -122,7 +120,13 @@ export function BaseMapsVisualizationProvider() {
      * Update layers with new params
      */
     async _updateLayers() {
-      const { layersOptions, curLayerIndex, layerIdOrder } = this._getMapsParams();
+      const { layersOptions, layerIdOrder } = this._getMapsParams();
+      for (let layerId in this._layers) {
+        if (layerIdOrder.find((id) => { return id === layerId }) === undefined) {
+          this._opensearchDashboardsMap.removeLayer(this._layers[layerId]);
+          delete this._layers[layerId];
+        }
+      }
 
       layerIdOrder.forEach(async (id, idx) => {
         let newOptions = {};
@@ -140,9 +144,8 @@ export function BaseMapsVisualizationProvider() {
             );
         }
 
-        if (!this._layers[id] || !this._layers[id].isReusable(newOptions)
-              || this._layers[id].getOptions().layerType !== newOptions.layerType) {
-            this._recreateTmsLayer(newOptions, idx);
+        if (!this._layers[id] || !this._layers[id].isReusable(newOptions)) {
+          this._recreateTmsLayer(newOptions, idx);
         } else {
           this._layers[id].updateOptions(newOptions);
         }
@@ -234,10 +237,6 @@ export function BaseMapsVisualizationProvider() {
         type: this.vis.type.name,
         ...this._params,
       };
-    }
-
-    _createNewLayerId() {
-      return 'layer_' + this._layerCounter++;
     }
   };
 }

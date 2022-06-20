@@ -6,5 +6,8 @@
     "build": "yarn plugin-helpers build",
     "plugin-helpers": "node ../../scripts/plugin_helpers",
     "osd": "node ../../scripts/osd"
+  },
+  "dependencies": {
+    "uuid": "^8.3.2"
   }
 }

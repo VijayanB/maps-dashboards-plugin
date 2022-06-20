@@ -4,12 +4,12 @@
  */
 
 import React, { useEffect } from "react";
-import { EuiPanel } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 import { FormattedMessage } from '@osd/i18n/react';
-import { SelectOption, TextInputOption } from '../../../../src/plugins/charts/public';
-import { VisOptionsProps } from "../../../../src/plugins/vis_default_editor/public";
-import { LayerOptions } from "../common/types";
+import { SelectOption, TextInputOption } from '../../../../../src/plugins/charts/public';
+import { VisOptionsProps } from "../../../../../src/plugins/vis_default_editor/public";
+import { LayerOptions } from "../../common/types";
+import { configMode } from "./layer_control";
 
 /**
  * Contain all Layers' options
@@ -25,33 +25,42 @@ interface MapsExplorerLayersOptions {
  */
 export interface MapsExplorerVisParams {
   layersOptions: MapsExplorerLayersOptions
-  curLayerId: string;
   layerIdOrder: string[]; // The order of layer ids, from the bottom to the top
 }
 
-export type MapsExlorerOptionsProps = VisOptionsProps<MapsExplorerVisParams>;
+export type MapsExlorerOptionsProps = VisOptionsProps<MapsExplorerVisParams> & {
+  configLayerId: string;
+  configMode: configMode;
+};
 
 /**
  * Sidebar UI to configure each layer
  * @param props 
  * @returns 
  */
-function MapExplorerOptions(props: MapsExlorerOptionsProps) {
-  const { stateParams, setValue, vis } = props;
+function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
+  const { stateParams, setValue, vis, setValidity, configLayerId, configMode } = props;
 
   const setLayerValue = <T extends keyof LayerOptions>(paramName: T, value: LayerOptions[T]) => {
     setValue("layersOptions", {
       ...stateParams.layersOptions,
-      [stateParams.curLayerId]: {
-        ...stateParams.layersOptions[stateParams.curLayerId],
+      [configLayerId]: {
+        ...stateParams.layersOptions[configLayerId],
         [paramName]: value
       }
     });
   }
 
-  return (
-    <EuiPanel paddingSize="s">
+  useEffect(() => {
+    if (stateParams.layersOptions[configLayerId].name !== "" && stateParams.layersOptions[configLayerId].layerType) {
+      setValidity(true);
+    } else {
+      setValidity(false);
+    }
+  }, [stateParams]);
 
+  return (
+    <>
       <TextInputOption
         label={
           <>
@@ -59,16 +68,8 @@ function MapExplorerOptions(props: MapsExlorerOptionsProps) {
             <span aria-hidden="true">*</span>
           </>
         }
-        helpText={
-          <>
-            <FormattedMessage
-              id="mapsExplorer.layerVisParams.nameLabelTip"
-              defaultMessage="The name of the TMS web service."
-            />
-          </>
-        }
         paramName="name"
-        value={stateParams.layersOptions[stateParams.curLayerId].name}
+        value={stateParams.layersOptions[configLayerId].name}
         setValue={setLayerValue}
       />
 
@@ -78,13 +79,13 @@ function MapExplorerOptions(props: MapsExlorerOptionsProps) {
         })}
         options={vis.type.editorConfig.collections.layerTypes}
         paramName="layerType"
-        value={stateParams.layersOptions[stateParams.curLayerId].layerType}
+        value={stateParams.layersOptions[configLayerId].layerType}
+        disabled={configMode === 'edit'}
         setValue={setLayerValue}
       />
-
-    </EuiPanel>
+    </>
   )
 }
 
-export { MapExplorerOptions };
+export { LayerConfigurationOptions };
 
