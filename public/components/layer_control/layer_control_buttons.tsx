@@ -54,6 +54,10 @@ function LayerControlButtons({
     dispatch(discardChanges(vis))
   }, [dispatch, vis, configMode]);
   const onClickClose = useCallback(() => setConfigLayerId(undefined), []);
+  const onClickCreateAndUpdate = useCallback(() => {
+    applyChanges();
+    setConfigLayerId(undefined);
+  }, [applyChanges]);
 
   return (
     <div className="layerControl__buttons">
@@ -111,7 +115,7 @@ function LayerControlButtons({
               disabled={!isDirty}
               fill
               iconType="play"
-              onClick={applyChanges}
+              onClick={onClickCreateAndUpdate}
               size="s"
             >
               {configMode === 'create' ? <FormattedMessage
