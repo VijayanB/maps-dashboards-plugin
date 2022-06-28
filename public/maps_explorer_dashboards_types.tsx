@@ -11,20 +11,14 @@ export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: Maps
 
   return {
     name: 'maps_explorer_dashboards',
-    // TODO: Define String ID  'visTypeMetric.mapsExplorerDashboardsTitle'
-    title: i18n.translate('visTypeMetric.mapsExplorerDashboardsTitle', { defaultMessage: 'Maps Explorer' }),
+    // TODO: Define String ID  'visTypeMapsExplorerDashboards.mapsExplorerDashboardsTitle'
+    title: i18n.translate('visTypeMapsExplorerDashboards.mapsExplorerDashboardsTitle', { defaultMessage: 'Maps Explorer' }),
     // TODO: change to the unique icon later
     icon: 'visMapRegion',
-    // TODO: Define String ID 'visTypeMetric.metricDescription'
-    description: i18n.translate('visTypeMetric.metricDescription', {
+    // TODO: Define String ID 'visTypeMapsExplorerDashboards.metricDescription'
+    description: i18n.translate('visTypeMapsExplorerDashboards.metricDescription', {
       defaultMessage: 'Add/Remove specific map layers depending on demand.',
     }),
-    visConfig: {
-      defaults: {
-        layersOptions: {},
-        layerIdOrder: []
-      }
-    },
     visualization: dependencies.BaseMapsVisualization,
     responseHandler: convertToGeoJson,
     editor: MapsExplorerEditorController,

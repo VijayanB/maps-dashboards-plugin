@@ -34,7 +34,7 @@ import { i18n } from '@osd/i18n';
 import { getEmsTileLayerId, getUiSettings, getToasts } from '../maps_explorer_dashboards_services';
 import { lazyLoadMapsExplorerDashboardsModules } from '../lazy_load_bundle';
 import { getServiceSettings } from '../get_service_settings';
-import { LayerTypes } from '../common/types/layer';
+import { DEFAULT_MAP_EXPLORER_VIS_PARAMS, LayerTypes } from '../common/types/layer';
 
 const WMS_MINZOOM = 0;
 const WMS_MAXZOOM = 22; //increase this to 22. Better for WMS
@@ -233,7 +233,7 @@ export function BaseMapsVisualizationProvider() {
 
     _getMapsParams() {
       return {
-        ...this.vis.type.visConfig.defaults,
+        ...DEFAULT_MAP_EXPLORER_VIS_PARAMS,
         type: this.vis.type.name,
         ...this._params,
       };
