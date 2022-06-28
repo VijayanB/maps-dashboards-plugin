@@ -7,7 +7,7 @@
 import './maps_explorer_editor.scss';
 import 'brace/mode/json';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { EventEmitter } from 'events';
 
 import { EditorRenderProps } from '../../../../src/plugins/visualize/public';
@@ -17,6 +17,7 @@ import {
 } from '../../../../src/plugins/opensearch_dashboards_react/public';
 import { Storage } from '../../../../src/plugins/opensearch_dashboards_utils/public';
 import { LayerControl } from './layer_control';
+import { DEFAULT_MAP_EXPLORER_VIS_PARAMS } from '../common/types';
 
 const localStorage = new Storage(window.localStorage);
 
@@ -38,6 +39,20 @@ function MapsExplorerEditor({
   embeddableHandler: VisualizeEmbeddableContract;
 }) {
   const visRef = useRef<HTMLDivElement>(null);
+
+  
+/**
+ * useMemo will executate during redening
+ * It will display the default base map image after initialization
+ */
+  useMemo(() => {
+    if (vis.params.layerIdOrder === undefined) {
+      vis.setState({
+        ...vis.serialize(),
+        params: DEFAULT_MAP_EXPLORER_VIS_PARAMS
+      })
+    }
+  }, []);
 
   useEffect(() => {
     if (!visRef.current) {

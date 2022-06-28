@@ -4,6 +4,7 @@
  */
 
 import { i18n } from '@osd/i18n';
+import { MapsExplorerVisParams } from '../../components/layer_control/layer_configuration_options';
 
 /**
  * Options which each layer included
@@ -19,8 +20,21 @@ export interface LayerOptions {
  * LayerTypes which users can choose for every layer
  */
 export enum LayerTypes {
-  TMSLayer = "TMS Layer",
-  GeohashLayer = "Geohash Layer",
+  TMSLayer = 'tms_layer',
+  GeohashLayer = 'geohash_layer',
+}
+
+export const DEFAULT_MAP_EXPLORER_VIS_PARAMS: MapsExplorerVisParams = {
+  layersOptions: {
+    base_roadmap: {
+      id: "base_roadmap",
+      name: i18n.translate('visTypeMapsExplorerDashboards.defaultLayerName', {
+        defaultMessage: 'Base Road Map',
+      }),
+      layerType: LayerTypes.TMSLayer,
+    }
+  },
+  layerIdOrder: ["base_roadmap"]
 }
 
 export const DEFAULT_NEW_LAYER_OPTIONS: LayerOptions = {
