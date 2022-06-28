@@ -99,7 +99,7 @@ function LayerCollectionPanel({
           size="s"
           title={<FormattedMessage
             id="mapsExplorerDashboards.opensearchDashboardsMap.addNewLayerInfo"
-            defaultMessage="Try to click the add icon to create your first layer."
+            defaultMessage="Use add icon to add your first layer."
           />}
           iconType="alert">
           
