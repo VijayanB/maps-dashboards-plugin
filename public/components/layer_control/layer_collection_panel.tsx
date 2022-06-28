@@ -13,13 +13,14 @@ import { cloneDeep } from 'lodash';
 import { EditorVisState } from 'src/plugins/vis_default_editor/public';
 import { VisParams } from 'src/plugins/visualizations/public';
 import { v4 as uuidv4 } from 'uuid';
+import { ConfigMode } from './layer_control';
 
 interface LayerCollectionPanelProps {
   state: EditorVisState;
   setStateValue: <T extends string | number>(paramName: T, value: VisParams[T]) => void;
   configLayerId: string | undefined;
   setConfigLayerId: (configLayerId: string | undefined) => void;
-  setConfigMode: (configMode: 'create' | 'edit') => void;
+  setConfigMode: (configMode: ConfigMode) => void;
   isConfigDirty: boolean; // Whether the layer configuration panel has pending changes.
   setConfigDirty(isDirty: boolean): void;
 }

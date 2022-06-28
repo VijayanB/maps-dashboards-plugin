@@ -9,7 +9,7 @@ import { FormattedMessage } from '@osd/i18n/react';
 import { SelectOption, TextInputOption } from '../../../../../src/plugins/charts/public';
 import { VisOptionsProps } from "../../../../../src/plugins/vis_default_editor/public";
 import { LayerOptions } from "../../common/types";
-import { configMode } from "./layer_control";
+import { ConfigMode } from "./layer_control";
 
 /**
  * Contain all Layers' options
@@ -30,7 +30,7 @@ export interface MapsExplorerVisParams {
 
 export type MapsExlorerOptionsProps = VisOptionsProps<MapsExplorerVisParams> & {
   configLayerId: string;
-  configMode: configMode;
+  configMode: ConfigMode;
 };
 
 /**

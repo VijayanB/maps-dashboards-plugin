@@ -18,7 +18,7 @@ import { i18n } from '@osd/i18n';
 import { Vis } from 'src/plugins/visualizations/public';
 import { discardChanges, EditorAction } from '../../../../../src/plugins/vis_default_editor/public';
 import './layer_control_buttons.scss'
-import { configMode } from './layer_control';
+import { ConfigMode } from './layer_control';
 
 interface LayerControlButtonsProps {
   isDirty: boolean;
@@ -27,7 +27,7 @@ interface LayerControlButtonsProps {
   dispatch: React.Dispatch<EditorAction>;
   vis: Vis;
   applyChanges(): void;
-  configMode: configMode;
+  configMode: ConfigMode;
   setConfigLayerId: (configLayerId: string | undefined) => void;
 }
 
