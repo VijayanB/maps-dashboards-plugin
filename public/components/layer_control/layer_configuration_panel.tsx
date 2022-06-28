@@ -3,13 +3,13 @@ import { i18n } from '@osd/i18n';
 import React, { useState } from "react";
 import { DefaultEditorNavBar, OptionTab } from "../../../../../src/plugins/vis_default_editor/public";
 import { LayerConfigurationOptions } from "./layer_configuration_options";
-import { configMode } from "./layer_control";
+import { ConfigMode } from "./layer_control";
 
 interface LayerConfigurationPanelProps {
   dataTabProps: any;
   optionTabProps: any;
   configLayerId: string | undefined;
-  configMode: configMode;
+  configMode: ConfigMode;
 }
 
 /**

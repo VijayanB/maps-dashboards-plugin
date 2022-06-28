@@ -19,10 +19,10 @@ import { LayerControlButtons } from './layer_control_buttons';
 import { useDebounce } from 'react-use';
 
 /**
- * use configMode to display different UI when users want to 
+ * use ConfigMode to display different UI when users want to 
  * create a new layer or edit an existing layer
  */
-export type configMode = 'create' | 'edit';
+export type ConfigMode = 'create' | 'edit';
 
 /**
  * LayerControlPanelProps have all layers' LayerOptions as a list
@@ -55,7 +55,7 @@ function LayerControl({
   const [state, dispatch] = useEditorReducer(vis, eventEmitter);
   const { formState, setTouched, setValidity, resetValidity } = useEditorFormState();
   const [configLayerId, setConfigLayerId] = useState<string | undefined>(undefined);
-  const [configMode, setConfigMode] = useState<'create' | 'edit'>('edit');
+  const [configMode, setConfigMode] = useState<ConfigMode>('edit');
 
   const responseAggs = useMemo(() => (state.data.aggs ? state.data.aggs.getResponseAggs() : []), [
     state.data.aggs,
