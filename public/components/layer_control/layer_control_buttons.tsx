@@ -56,7 +56,6 @@ function LayerControlButtons({
   const onClickClose = useCallback(() => setConfigLayerId(undefined), []);
   const onClickCreateAndUpdate = useCallback(() => {
     applyChanges();
-    setConfigLayerId(undefined);
   }, [applyChanges]);
 
   return (
@@ -93,6 +92,7 @@ function LayerControlButtons({
         </EuiFlexItem>}
 
         <EuiFlexItem grow={false}>
+          {/* when inputs are invalid and after clciking the creat button, display tooltip */}
           {isInvalid && isTouched ? (
             <EuiToolTip
               content={i18n.translate('layerControl.button.errorButtonTooltip', {
@@ -102,10 +102,10 @@ function LayerControlButtons({
               <EuiButton color="danger" iconType="alert" size="s" disabled>
                 {configMode === 'create' ? <FormattedMessage
                   id="layerControl.button.createChartButtonLabel"
-                  defaultMessage="Create"
+                  defaultMessage="Create & Save"
                 /> : <FormattedMessage
                   id="layerControl.button.updateChartButtonLabel"
-                  defaultMessage="Update"
+                  defaultMessage="Update & Save"
                 />}
               </EuiButton>
             </EuiToolTip>
@@ -120,10 +120,10 @@ function LayerControlButtons({
             >
               {configMode === 'create' ? <FormattedMessage
                 id="layerControl.button.createChartButtonLabel"
-                defaultMessage="Create"
+                defaultMessage="Create & Save"
               /> : <FormattedMessage
                 id="layerControl.button.updateChartButtonLabel"
-                defaultMessage="Update"
+                defaultMessage="Update & Save"
               />}
             </EuiButton>
           )}
