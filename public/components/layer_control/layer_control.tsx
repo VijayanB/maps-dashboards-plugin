@@ -106,6 +106,8 @@ function LayerControl({
       isDirty: false,
     });
     setTouched(false);
+    // close the configuration panel after clicking applyChanges()
+    setConfigLayerId(undefined);
   }, [vis, state, formState.invalid, setTouched, isDirty, eventEmitter, embeddableHandler]);
 
   const onSubmit: KeyboardEventHandler<HTMLFormElement> = useCallback(
