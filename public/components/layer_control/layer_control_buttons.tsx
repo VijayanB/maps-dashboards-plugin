@@ -47,13 +47,9 @@ function LayerControlButtons({
   setConfigLayerId,
 }: LayerControlButtonsProps) {
   const onClickDiscard = useCallback(() => {
-    // When creating a new layer, discard will remove the layer entirely
-    if (configMode === 'create') {
-      setConfigLayerId(undefined);
-    }
     dispatch(discardChanges(vis))
+    setConfigLayerId(undefined);
   }, [dispatch, vis, configMode]);
-  const onClickClose = useCallback(() => setConfigLayerId(undefined), []);
   const onClickCreateAndUpdate = useCallback(() => {
     applyChanges();
   }, [applyChanges]);
@@ -61,36 +57,22 @@ function LayerControlButtons({
   return (
     <div className="layerControl__buttons">
       <EuiFlexGroup justifyContent="spaceBetween" gutterSize="none" responsive={false}>
-        {(configMode === 'create' || isDirty) && <EuiFlexItem grow={false}>
+        <EuiFlexItem grow={false}>
           <EuiButtonEmpty
             data-test-subj="layerControlDiscardButton"
-            iconType={configMode === 'create' ? "trash" : "cross"}
+            iconType={"cross"}
             onClick={onClickDiscard}
             size="s"
           >
-            {configMode === 'create' ? <FormattedMessage
-              id="layerControl.button.deleteButtonLabel"
-              defaultMessage="Delete"
+            {(configMode === 'edit' && !isDirty) ? <FormattedMessage
+              id="layerControl.button.cancelButtonLabel"
+              defaultMessage="Cancel"
             /> : <FormattedMessage
               id="layerControl.button.discardButtonLabel"
               defaultMessage="Discard"
             />}
           </EuiButtonEmpty>
-        </EuiFlexItem>}
-        {configMode === 'edit' && !isDirty && <EuiFlexItem grow={false}>
-          <EuiButtonEmpty
-            data-test-subj="layerControlCloseButton"
-            iconType="sortUp"
-            onClick={onClickClose}
-            size="s"
-          >
-            <FormattedMessage
-              id="layerControl.button.closeButtonLabel"
-              defaultMessage="Close"
-            />
-          </EuiButtonEmpty>
-        </EuiFlexItem>}
-
+        </EuiFlexItem>
         <EuiFlexItem grow={false}>
           {/* when inputs are invalid and after clciking the creat button, display tooltip */}
           {isInvalid && isTouched ? (
