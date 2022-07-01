@@ -1,4 +1,4 @@
-import { EuiFlexItem } from "@elastic/eui";
+import './layer_configuration_panel.scss';
 import { i18n } from '@osd/i18n';
 import React, { useState } from "react";
 import { DefaultEditorNavBar, OptionTab } from "../../../../../src/plugins/vis_default_editor/public";
@@ -36,25 +36,23 @@ function LayerConfigurationPanel({
   }])
 
   return (
-    <EuiFlexItem>
-      <EuiFlexItem className="visEditorSidebar__formWrapper">
-        <DefaultEditorNavBar optionTabs={optionTabs} setSelectedTab={setSelectedTab} />
-        {optionTabs.map(({ editor: Editor, name, isSelected = false }) => (
-          <div
-            key={name}
-            className={`visEditorSidebar__config ${isSelected ? '' : 'visEditorSidebar__config-isHidden'
-              }`}
-          >
-            <Editor
-              isTabSelected={isSelected}
-              {...(name === 'data' ? dataTabProps : optionTabProps)}
-              configLayerId={configLayerId}
-              configMode={configMode}
-            />
-          </div>
-        ))}
-      </EuiFlexItem>
-    </EuiFlexItem>
+    <>
+      <DefaultEditorNavBar optionTabs={optionTabs} setSelectedTab={setSelectedTab} />
+      {optionTabs.map(({ editor: Editor, name, isSelected = false }) => (
+        <div
+          key={name}
+          className={`visEditorSidebar__config ${isSelected ? '' : 'visEditorSidebar__config-isHidden'
+            }`}
+        >
+          <Editor
+            isTabSelected={isSelected}
+            {...(name === 'data' ? dataTabProps : optionTabProps)}
+            configLayerId={configLayerId}
+            configMode={configMode}
+          />
+        </div>
+      ))}
+    </>
   )
 }
 

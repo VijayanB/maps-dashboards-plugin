@@ -8,14 +8,13 @@ import {
     createRegionBlockedWarning,
     removeRegionBlockedWarning
 } from '../../map_messages';
-import { ORIGIN } from '../../../common/constants/origin';
+import { getEmsTileLayerId, getToasts, getUiSettings } from "../../../maps_explorer_dashboards_services";
+import { getServiceSettings } from "../../../get_service_settings";
 
 /**
  * Construct TmsLayer
  */
 export class TMSLayer extends OpenSearchDashboardsMapLayer {
-    _options;
-    _opensearchDashboardsMap;
     _leaflet;
     _isDesaturated;
 
@@ -24,23 +23,62 @@ export class TMSLayer extends OpenSearchDashboardsMapLayer {
         opensearchDashboardsMap: any,
         leaflet: any
     ) {
-        super();
-        this._options = options;
-        this._opensearchDashboardsMap = opensearchDashboardsMap;
+        super(opensearchDashboardsMap, options);
         this._leaflet = leaflet;
-        this._isDesaturated = true;
-        this._leafletLayer = this._createTmsLeafletLayer();
+        this._isDesaturated = options.isDesaturated;
+        this._leafletLayer = null;
+    }
+
+    async decorateOptions() {
+        const emsTileLayerId = getEmsTileLayerId();
+
+        try {
+            const serviceSettings = await getServiceSettings();
+            const tmsServices = await serviceSettings.getTMSServices();
+            const userConfiguredTmsLayer = tmsServices[0];
+            const initMapLayer = userConfiguredTmsLayer
+                ? userConfiguredTmsLayer
+                : tmsServices.find((s) => s.id === emsTileLayerId.bright);
+            if (initMapLayer) {
+                this._opensearchDashboardsMap.setMinZoom(initMapLayer.minZoom);
+                this._opensearchDashboardsMap.setMaxZoom(initMapLayer.maxZoom);
+                if (this._opensearchDashboardsMap.getZoomLevel() > initMapLayer.maxZoom) {
+                    this._opensearchDashboardsMap.setZoomLevel(initMapLayer.maxZoom);
+                }
+                let isDesaturated = this._options.isDesaturated;
+                if (typeof isDesaturated !== 'boolean') {
+                    isDesaturated = false;
+                }
+                const isDarkMode = getUiSettings().get('theme:darkMode');
+                const serviceSettings = await getServiceSettings();
+                const meta = await serviceSettings.getAttributesForTMSLayer(
+                    initMapLayer,
+                    isDesaturated,
+                    isDarkMode
+                );
+                const showZoomMessage = serviceSettings.shouldShowZoomMessage(initMapLayer);
+                delete initMapLayer.subdomains;
+                delete initMapLayer.id;
+                const options = { ...this._options, ...initMapLayer, showZoomMessage, ...meta };
+                return options;
+            }
+        } catch (e: any) {
+            getToasts().addWarning(e.message);
+            return;
+        }
+        return;
     }
 
     /**
      * Create a new tmsLayer
      * @returns leafletLayer
      */
-    _createTmsLeafletLayer() {
+    async createLeafletLayer() {
         let leafletLayer = this._leaflet.tileLayer(this._options.url, {
             minZoom: this._options.minZoom,
             maxZoom: this._options.maxZoom,
             subdomains: this._options.subdomains || [],
+            crossOrigin: true
         });
 
         if (leafletLayer) {
@@ -63,14 +101,11 @@ export class TMSLayer extends OpenSearchDashboardsMapLayer {
     _updateDesaturation() {
         removeRegionBlockedWarning();
         const tiles = $('img.leaflet-tile-loaded');
-        // Don't apply client-side styling to EMS basemaps
-        if (this._options.origin === ORIGIN.EMS) {
-            tiles.addClass('filters-off');
-        } else if (this._isDesaturated) {
+        if (this._isDesaturated) {
             tiles.removeClass('filters-off');
         }
-        else if (!this._isDesaturated) {
-            tiles.addClass('fileters-off');
+        else {
+            tiles.addClass('filters-off');
         }
     }
 

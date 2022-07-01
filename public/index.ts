@@ -42,8 +42,6 @@ export {
 export * from './common/types';
 export { ORIGIN } from './common/constants/origin';
 
-export { WmsOptions } from './components/wms_options';
-
 export { lazyLoadMapsExplorerDashboardsModules } from './lazy_load_bundle';
 
 // This exports static code and TypeScript types,

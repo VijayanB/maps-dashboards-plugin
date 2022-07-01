@@ -36,8 +36,8 @@ import { lazyLoadMapsExplorerDashboardsModules } from '../lazy_load_bundle';
 import { getServiceSettings } from '../get_service_settings';
 import { DEFAULT_MAP_EXPLORER_VIS_PARAMS, LayerTypes } from '../common/types/layer';
 
-const WMS_MINZOOM = 0;
-const WMS_MAXZOOM = 22; //increase this to 22. Better for WMS
+const DEFAULT_MINZOOM = 0;
+const DEFAULT_MAXZOOM = 22; //increase this to 22. Better for WMS
 
 export function BaseMapsVisualizationProvider() {
   /**
@@ -107,8 +107,8 @@ export function BaseMapsVisualizationProvider() {
       const modules = await lazyLoadMapsExplorerDashboardsModules();
       this.L = modules.L;
       this._opensearchDashboardsMap = new modules.OpenSearchDashboardsMap(this._container, options);
-      this._opensearchDashboardsMap.setMinZoom(WMS_MINZOOM); //use a default
-      this._opensearchDashboardsMap.setMaxZoom(WMS_MAXZOOM); //use a default
+      this._opensearchDashboardsMap.setMinZoom(DEFAULT_MINZOOM); //use a default
+      this._opensearchDashboardsMap.setMaxZoom(DEFAULT_MAXZOOM); //use a default
 
       this._opensearchDashboardsMap.addLegendControl();
       this._opensearchDashboardsMap.addFitControl();
@@ -121,6 +121,7 @@ export function BaseMapsVisualizationProvider() {
      */
     async _updateLayers() {
       const { layersOptions, layerIdOrder } = this._getMapsParams();
+      // remove the deleted layer 
       for (let layerId in this._layers) {
         if (layerIdOrder.find((id) => { return id === layerId }) === undefined) {
           this._opensearchDashboardsMap.removeLayer(this._layers[layerId]);
@@ -128,12 +129,14 @@ export function BaseMapsVisualizationProvider() {
         }
       }
 
-      layerIdOrder.forEach(async (id, idx) => {
-        let newOptions = {};
+      for (const id of layerIdOrder) {
         const layerOptions = layersOptions[id];
-        switch (layerOptions.layerType) {
-          case LayerTypes.TMSLayer: newOptions = await this._getTmsLayerOptions(layerOptions); break;
-          default:
+        if (!this._layers[id]) {
+          let newLayer = null;
+          switch (layerOptions.layerType) {
+            case LayerTypes.TMSLayer: newLayer = await this._createTmsLayer(layerOptions); break;
+            case LayerTypes.WMSLayer: newLayer = await this._createWmsLayer(layerOptions); break;
+            default:
             throw new Error(
               i18n.translate('mapExplorerDashboard.layerType.unsupportedErrorMessage', {
                 defaultMessage: '{layerType} layer type not recognized',
@@ -142,70 +145,30 @@ export function BaseMapsVisualizationProvider() {
                 },
               })
             );
-        }
-
-        if (!this._layers[id] || !this._layers[id].isReusable(newOptions)) {
-          this._recreateTmsLayer(newOptions, idx);
+          }
+          if (newLayer) {
+            await newLayer.updateOptions(layerOptions).then(() => {
+              this._opensearchDashboardsMap.addLayer(newLayer);
+              this._layers[id] = newLayer;
+            });
+          }
         } else {
-          this._layers[id].updateOptions(newOptions);
+          await this._layers[id].updateOptions(layerOptions);
         }
-      });
+        this._layers[id].bringToFront();
+      }
     }
 
-    async _getTmsLayerOptions(options) {
-      const emsTileLayerId = getEmsTileLayerId();
-
-      if (!this._opensearchDashboardsMap) {
-        return;
-      }
-      try {
-        const serviceSettings = await getServiceSettings();
-        const tmsServices = await serviceSettings.getTMSServices();
-        const userConfiguredTmsLayer = tmsServices[0];
-        const initMapLayer = userConfiguredTmsLayer
-          ? userConfiguredTmsLayer
-          : tmsServices.find((s) => s.id === emsTileLayerId.bright);
-        if (initMapLayer) {
-          this._opensearchDashboardsMap.setMinZoom(initMapLayer.minZoom);
-          this._opensearchDashboardsMap.setMaxZoom(initMapLayer.maxZoom);
-          if (this._opensearchDashboardsMap.getZoomLevel() > initMapLayer.maxZoom) {
-            this._opensearchDashboardsMap.setZoomLevel(initMapLayer.maxZoom);
-          }
-          let isDesaturated = this._getMapsParams().isDesaturated;
-          if (typeof isDesaturated !== 'boolean') {
-            isDesaturated = true;
-          }
-          const isDarkMode = getUiSettings().get('theme:darkMode');
-          const serviceSettings = await getServiceSettings();
-          const meta = await serviceSettings.getAttributesForTMSLayer(
-            initMapLayer,
-            isDesaturated,
-            isDarkMode
-          );
-          const showZoomMessage = serviceSettings.shouldShowZoomMessage(initMapLayer);
-          delete initMapLayer.subdomains;
-          delete initMapLayer.id;
-          options = { ...options, ...initMapLayer, showZoomMessage, ...meta };
-          return options;
-        }
-      } catch (e) {
-        getToasts().addWarning(e.message);
-        return;
-      }
-      return;
-    }
-
-    async _recreateTmsLayer(newOptions, idx) {
+    async _createTmsLayer(newOptions) {
       const { TMSLayer } = await import('./layer/tms_layer/tms_layer');
-
-      if (this._layers[newOptions.id]) {
-        this._opensearchDashboardsMap.removeLayer(this._layers[newOptions.id]);
-        this._layers[newOptions.id] = null;
-      }
-
       const tmsLayer = new TMSLayer(newOptions, this._opensearchDashboardsMap, this.L);
-      this._opensearchDashboardsMap.addLayer(tmsLayer, idx);
-      this._layers[newOptions.id] = tmsLayer;
+      return tmsLayer;
+    }
+
+    async _createWmsLayer(newOptions) {
+      const { WMSLayer } = await import('./layer/wms_layer/wms_layer');
+      const wmsLayer = new WMSLayer(newOptions, this._opensearchDashboardsMap, this.L);
+      return wmsLayer;
     }
 
     async _updateData() {

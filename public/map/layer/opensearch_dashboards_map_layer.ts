@@ -39,7 +39,7 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
   _attribution: any;
   _options: LayerOptions;
   _opensearchDashboardsMap: any;
-  
+
   constructor(opensearchDashboardsMap: any, options: LayerOptions) {
     super();
     this._leafletLayer = null;
@@ -59,11 +59,13 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
     leafletMap.removeLayer(this._leafletLayer);
   }
 
-  appendLegendContents() {}
+  async createLeafletLayer() { }
 
-  updateExtent() {}
+  appendLegendContents() { }
 
-  movePointer() {}
+  updateExtent() { }
+
+  movePointer() { }
 
   getAttributions() {
     return this._attribution;
@@ -74,7 +76,7 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
    * @param isDesaturated 
    * @returns 
    */
-  setDesaturate(isDesaturated: boolean) {}
+  setDesaturate(isDesaturated: boolean) { }
 
   /**
    * Check whether the new optoin requires a re-creation of the layer,
@@ -88,15 +90,38 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
   }
 
   /**
+   * The function allows layer to modify options if necessary.
+   * @param options the original options
+   * @returns options that has been decorated
+   */
+  async decorateOptions(options: LayerOptions) {
+    return options;
+  }
+
+  /**
    * Update layer's options
    * @param options The option that is specific for the layer
    */
-  updateOptions(options: LayerOptions) {
-    this._options = options;
+  async updateOptions(options: LayerOptions) {
+    const newOptions = await this.decorateOptions(options);
+    if (this._leafletLayer === null || !this.isReusable(newOptions)) {
+      this._options = newOptions;
+      if (this._leafletLayer !== null) {
+        this.removeFromLeafletMap(this._opensearchDashboardsMap._leafletMap);
+      }
+      this._leafletLayer = await this.createLeafletLayer();
+      this.addToLeafletMap(this._opensearchDashboardsMap._leafletMap);
+    } else {
+      this._options = newOptions;
+    }
     this.emit('layer:update');
   }
 
   getOptions() {
     return this._options;
+  }
+
+  bringToFront() {
+    this._leafletLayer.bringToFront();
   }
 }

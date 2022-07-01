@@ -3,13 +3,14 @@
  * GitHub history for details.
  */
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { i18n } from '@osd/i18n';
 import { FormattedMessage } from '@osd/i18n/react';
 import { SelectOption, TextInputOption } from '../../../../../src/plugins/charts/public';
 import { VisOptionsProps } from "../../../../../src/plugins/vis_default_editor/public";
-import { LayerOptions } from "../../common/types";
+import { LayerOptions, LayerTypeOptions, LayerTypes, } from "../../common/types";
 import { ConfigMode } from "./layer_control";
+import { WmsConfigurationOptions } from "./layers_config_options/wms_configuration_options";
 
 /**
  * Contain all Layers' options
@@ -40,8 +41,14 @@ export type MapsExlorerOptionsProps = VisOptionsProps<MapsExplorerVisParams> & {
  */
 function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
   const { stateParams, setValue, vis, setValidity, configLayerId, configMode } = props;
+  // specific layer's input options validity
+  const [optionValidity, setOptionValidity] = useState(true); 
 
+  //update layer's options
   const setLayerValue = <T extends keyof LayerOptions>(paramName: T, value: LayerOptions[T]) => {
+    // during the creatation, when users switch layer type from other types to TMS, 
+    //set optionValidity Trur to ensure users are able to creat new TMS layer
+    if (paramName === "layerType") {setOptionValidity(true);};
     setValue("layersOptions", {
       ...stateParams.layersOptions,
       [configLayerId]: {
@@ -51,13 +58,21 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
     });
   }
 
+  //update the specific layer's options
+  const setTypeOptions = <T extends keyof LayerTypeOptions>(paramName: T, value: LayerTypeOptions[T]) =>
+    setLayerValue('typeOptions', {
+      ...stateParams.layersOptions[configLayerId].typeOptions,
+      [paramName]: value,
+    });
+
+  // Validate user input
   useEffect(() => {
-    if (stateParams.layersOptions[configLayerId].name !== "" && stateParams.layersOptions[configLayerId].layerType) {
+    if (optionValidity && stateParams.layersOptions[configLayerId].name && stateParams.layersOptions[configLayerId].layerType) {
       setValidity(true);
     } else {
       setValidity(false);
     }
-  }, [stateParams]);
+  }, [stateParams, optionValidity]);
 
   return (
     <>
@@ -83,6 +98,14 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
         disabled={configMode === 'edit'}
         setValue={setLayerValue}
       />
+
+      {stateParams.layersOptions[configLayerId].layerType === LayerTypes.WMSLayer &&
+        <WmsConfigurationOptions
+          wms={stateParams.layersOptions[configLayerId].typeOptions}
+          setTypeOptions={setTypeOptions}
+          setOptionValidity={setOptionValidity}
+        />
+      }
     </>
   )
 }

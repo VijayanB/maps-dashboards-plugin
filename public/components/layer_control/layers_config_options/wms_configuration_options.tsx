@@ -30,19 +30,32 @@
  * GitHub history for details.
  */
 
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { EuiLink, EuiSpacer, EuiText, EuiScreenReaderOnly } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 
-import { TextInputOption } from '../../../../src/plugins/charts/public';
-import { WMSOptions } from '../common/types/external_basemap_types';
+import { TextInputOption } from '../../../../../../src/plugins/charts/public';
 
-interface WmsInternalOptions {
-  wms: WMSOptions;
-  setValue: <T extends keyof WMSOptions>(paramName: T, value: WMSOptions[T]) => void;
+/**
+ * WMS layer options
+ */
+export interface WMSConfigurationOptions {
+  url?: string;
+  version?: string;
+  layers?: string;
+  format?: string;
+  transparent?: boolean;
+  attribution?: string;
+  styles?: string;
+}
+interface WmsConfigurationOptionsProps {
+  wms: WMSConfigurationOptions;
+  setTypeOptions<T extends keyof WMSConfigurationOptions>(paramName: T, value: WMSConfigurationOptions[T]): void;
+  setOptionValidity(isValid: boolean): void
 }
 
-function WmsInternalOptions({ wms, setValue }: WmsInternalOptions) {
+function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: WmsConfigurationOptionsProps) {
+
   const wmsLink = (
     <EuiLink href="http://www.opengeospatial.org/standards/wms" target="_blank">
       <FormattedMessage id="maps_legacy.wmsOptions.wmsLinkText" defaultMessage="OGC standard" />
@@ -57,20 +70,20 @@ function WmsInternalOptions({ wms, setValue }: WmsInternalOptions) {
       />
     </>
   );
-  const footnote = (
-    <EuiScreenReaderOnly>
-      <p>{footnoteText}</p>
-    </EuiScreenReaderOnly>
-  );
 
-  const setOptions = <T extends keyof WMSOptions['options']>(
-    paramName: T,
-    value: WMSOptions['options'][T]
-  ) =>
-    setValue('options', {
-      ...wms.options,
-      [paramName]: value,
-    });
+  // initalize the configuration
+  useMemo(() => {
+    setTypeOptions('format', 'image/png');
+  }, []);
+
+   // Validate user input
+   useEffect(() => {
+    if (wms.url && wms.format) {
+      setOptionValidity(true);
+    } else {
+      setOptionValidity(false);
+    }
+  }, [wms]);
 
   return (
     <>
@@ -92,41 +105,32 @@ function WmsInternalOptions({ wms, setValue }: WmsInternalOptions) {
           </>
         }
         helpText={
-          <>
-            <FormattedMessage
-              id="maps_legacy.wmsOptions.urlOfWMSWebServiceTip"
-              defaultMessage="The URL of the WMS web service."
-            />
-            {footnote}
-          </>
+          <FormattedMessage
+            id="maps_legacy.wmsOptions.urlOfWMSWebServiceTip"
+            defaultMessage="The URL of the WMS web service."
+          />
         }
         paramName="url"
         value={wms.url}
-        setValue={setValue}
+        setValue={setTypeOptions}
       />
 
       <TextInputOption
         label={
-          <>
-            <FormattedMessage
-              id="maps_legacy.wmsOptions.wmsLayersLabel"
-              defaultMessage="WMS layers"
-            />
-            <span aria-hidden="true">*</span>
-          </>
+          <FormattedMessage
+            id="maps_legacy.wmsOptions.wmsLayersLabel"
+            defaultMessage="WMS sub-layers"
+          />
         }
         helpText={
-          <>
-            <FormattedMessage
-              id="maps_legacy.wmsOptions.listOfLayersToUseTip"
-              defaultMessage="A comma separated list of layers to use."
-            />
-            {footnote}
-          </>
+          <FormattedMessage
+            id="maps_legacy.wmsOptions.listOfLayersToUseTip"
+            defaultMessage="A comma separated list of layers to use."
+          />
         }
         paramName="layers"
-        value={wms.options.layers}
-        setValue={setOptions}
+        value={wms.layers}
+        setValue={setTypeOptions}
       />
 
       <TextInputOption
@@ -140,17 +144,14 @@ function WmsInternalOptions({ wms, setValue }: WmsInternalOptions) {
           </>
         }
         helpText={
-          <>
-            <FormattedMessage
-              id="maps_legacy.wmsOptions.versionOfWMSserverSupportsTip"
-              defaultMessage="The version of WMS the server supports."
-            />
-            {footnote}
-          </>
+          <FormattedMessage
+            id="maps_legacy.wmsOptions.versionOfWMSserverSupportsTip"
+            defaultMessage="The version of WMS the server supports."
+          />
         }
         paramName="version"
-        value={wms.options.version}
-        setValue={setOptions}
+        value={wms.version}
+        setValue={setTypeOptions}
       />
 
       <TextInputOption
@@ -164,17 +165,14 @@ function WmsInternalOptions({ wms, setValue }: WmsInternalOptions) {
           </>
         }
         helpText={
-          <>
-            <FormattedMessage
-              id="maps_legacy.wmsOptions.imageFormatToUseTip"
-              defaultMessage="Usually image/png or image/jpeg. Use png if the server will return transparent layers."
-            />
-            {footnote}
-          </>
+          <FormattedMessage
+            id="maps_legacy.wmsOptions.imageFormatToUseTip"
+            defaultMessage="Usually image/png or image/jpeg. Use png if the server will return transparent layers."
+          />
         }
         paramName="format"
-        value={wms.options.format}
-        setValue={setOptions}
+        value={wms.format}
+        setValue={setTypeOptions}
       />
 
       <TextInputOption
@@ -191,8 +189,8 @@ function WmsInternalOptions({ wms, setValue }: WmsInternalOptions) {
           />
         }
         paramName="attribution"
-        value={wms.options.attribution}
-        setValue={setOptions}
+        value={wms.attribution}
+        setValue={setTypeOptions}
       />
 
       <TextInputOption
@@ -206,17 +204,14 @@ function WmsInternalOptions({ wms, setValue }: WmsInternalOptions) {
           </>
         }
         helpText={
-          <>
-            <FormattedMessage
-              id="maps_legacy.wmsOptions.wmsServerSupportedStylesListTip"
-              defaultMessage="A comma separated list of WMS server supported styles to use. Blank in most cases."
-            />
-            {footnote}
-          </>
+          <FormattedMessage
+            id="maps_legacy.wmsOptions.wmsServerSupportedStylesListTip"
+            defaultMessage="A comma separated list of WMS server supported styles to use. Blank in most cases."
+          />
         }
         paramName="styles"
-        value={wms.options.styles}
-        setValue={setOptions}
+        value={wms.styles}
+        setValue={setTypeOptions}
       />
 
       <EuiText size="xs">
@@ -226,4 +221,4 @@ function WmsInternalOptions({ wms, setValue }: WmsInternalOptions) {
   );
 }
 
-export { WmsInternalOptions };
+export { WmsConfigurationOptions };

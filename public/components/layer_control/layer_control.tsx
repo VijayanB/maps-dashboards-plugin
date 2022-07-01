@@ -4,7 +4,7 @@
  */
 
 import React, { KeyboardEventHandler, useCallback, useEffect, useMemo, useState } from 'react';
-import { keys, EuiPanel, EuiFlexItem, EuiFlexGroup} from '@elastic/eui';
+import { keys, EuiPanel, EuiFlexItem, EuiFlexGroup } from '@elastic/eui';
 import { LayerCollectionPanel } from './layer_collection_panel';
 import { useEditorFormState, discardChanges, Schema, DefaultEditorAggCommonProps, setStateParamValue, useEditorReducer } from '../../../../../src/plugins/vis_default_editor/public';
 import { PersistedState, Vis, VisualizeEmbeddableContract } from 'src/plugins/visualizations/public';
@@ -183,7 +183,7 @@ function LayerControl({
     setTouched,
     timeRange,
   };
-  
+
   return (
     <I18nProvider>
       <EuiPanel paddingSize="s" className='layer-panel'>
@@ -193,7 +193,7 @@ function LayerControl({
           direction="column"
           gutterSize='s'
         >
-          <EuiFlexItem>
+          <EuiFlexItem grow={false}>
             <LayerCollectionPanel
               state={state}
               setStateValue={setStateValue}
@@ -204,9 +204,9 @@ function LayerControl({
               setConfigDirty={setDirty}
             />
           </EuiFlexItem>
-          {configLayerId && <EuiFlexItem>
+          {configLayerId &&
             <form
-              className="visEditorSidebar__form"
+              className="visEditorSidebar__form euiFlexItem"
               name="visualizeEditor"
               onKeyDownCapture={onSubmit}
             >
@@ -216,8 +216,7 @@ function LayerControl({
                 configLayerId={configLayerId}
                 configMode={configMode}
               />
-            </form>
-          </EuiFlexItem>}
+            </form>}
           {configLayerId && <EuiFlexItem grow={false}>
             <LayerControlButtons
               applyChanges={applyChanges}
