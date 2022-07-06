@@ -40,11 +40,11 @@ function MapsExplorerEditor({
 }) {
   const visRef = useRef<HTMLDivElement>(null);
 
-  
-/**
- * useMemo will executate during redening
- * It will display the default base map image after initialization
- */
+
+  /**
+   * useMemo will executate during redenering
+   * It will display the default base map image after initialization
+   */
   useMemo(() => {
     if (vis.params.layerIdOrder === undefined) {
       vis.setState({
@@ -85,7 +85,10 @@ function MapsExplorerEditor({
           ...core,
         }}
       >
-        <div className="layerPanel__container">
+        <div
+          className="layerPanel__container"
+          style={{ maxHeight: visRef.current?.clientHeight - 100 }}
+        >
           <LayerControl
             embeddableHandler={embeddableHandler}
             vis={vis}

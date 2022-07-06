@@ -144,6 +144,7 @@ export class OpenSearchDashboardsMap extends EventEmitter {
 
     // eslint-disable-next-line no-undef
     this._leafletMap = L.map(containerNode, leafletOptions);
+
     this._leafletMap.attributionControl.setPrefix('');
 
     if (!options.scrollWheelZoom) {
@@ -237,15 +238,6 @@ export class OpenSearchDashboardsMap extends EventEmitter {
   }
 
   addLayer(opensearchDashboardsLayer) {
-    this.addLayer(opensearchDashboardsLayer, undefined);
-  }
-
-  /**
-   * Add new layer and listen to this layer
-   * @param {*} opensearchDashboardsLayer 
-   * @param {*} index 
-   */
-  addLayer(opensearchDashboardsLayer, index) {
     const onshowTooltip = (event) => {
       if (!this._showTooltip) {
         return;
@@ -307,11 +299,7 @@ export class OpenSearchDashboardsMap extends EventEmitter {
       layer: opensearchDashboardsLayer,
     });
 
-    if (index) {
-      this._layers.splice(index, 0, opensearchDashboardsLayer);
-    } else {
-      this._layers.push(opensearchDashboardsLayer);
-    }
+    this._layers.push(opensearchDashboardsLayer);
 
     opensearchDashboardsLayer.addToLeafletMap(this._leafletMap);
     this.emit('layers:update');

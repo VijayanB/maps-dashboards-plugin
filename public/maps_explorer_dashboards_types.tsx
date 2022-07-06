@@ -33,9 +33,9 @@ export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: Maps
             }),
           },
           {
-            value: LayerTypes.GeohashLayer,
+            value: LayerTypes.WMSLayer,
             text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.geohashLayerText', {
-              defaultMessage: 'Geohash Layer',
+              defaultMessage: 'WMS Layer',
             }),
           },
         ],

@@ -30,22 +30,7 @@
  * GitHub history for details.
  */
 
-import { TmsLayer } from '../../index';
 import { MapTypes } from './map_types';
-
-export interface WMSOptions {
-  selectedTmsLayer?: TmsLayer;
-  enabled: boolean;
-  url?: string;
-  options: {
-    version?: string;
-    layers?: string;
-    format: string;
-    transparent: boolean;
-    attribution?: string;
-    styles?: string;
-  };
-}
 
 export interface TileMapVisParams {
   colorSchema: string;
