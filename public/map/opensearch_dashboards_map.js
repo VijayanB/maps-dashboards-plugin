@@ -324,7 +324,7 @@ export class OpenSearchDashboardsMap extends EventEmitter {
       }
     });
 
-    //must readd all attributions, because we might have removed dupes
+    //must re-add all attributions, because we might have removed dupes
     this._layers.forEach((layer) => this._addAttributions(layer.getAttributions()));
   }
 

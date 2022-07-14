@@ -17,6 +17,7 @@ export interface LayerOptions {
   layerType?: LayerTypes;
   typeOptions: LayerTypeOptions;
   isDesatured: boolean;
+  isHide: boolean;
 };
 
 /**
@@ -42,6 +43,7 @@ export const DEFAULT_MAP_EXPLORER_VIS_PARAMS: MapsExplorerVisParams = {
       }),
       layerType: LayerTypes.TMSLayer,
       isDesatured: false,
+      isHide: false,
       typeOptions: {}
     }
   },
@@ -52,5 +54,6 @@ export const DEFAULT_NEW_LAYER_OPTIONS: LayerOptions = {
   id: "new_layer",
   name: i18n.translate('layers.defaultNewLayerOptions.name', { defaultMessage: 'New Layer' }),
   isDesatured: false,
-  typeOptions: {}
+  typeOptions: {},
+  isHide: false
 } 
