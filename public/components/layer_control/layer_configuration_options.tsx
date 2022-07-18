@@ -11,6 +11,7 @@ import { VisOptionsProps } from "../../../../../src/plugins/vis_default_editor/p
 import { LayerOptions, LayerTypeOptions, LayerTypes, } from "../../common/types";
 import { ConfigMode } from "./layer_control";
 import { WmsConfigurationOptions } from "./layers_config_options/wms_configuration_options";
+import { EuiDualRange } from "@elastic/eui";
 
 /**
  * Contain all Layers' options
@@ -42,18 +43,30 @@ export type MapsExlorerOptionsProps = VisOptionsProps<MapsExplorerVisParams> & {
 function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
   const { stateParams, setValue, vis, setValidity, configLayerId, configMode } = props;
   // specific layer's input options validity
-  const [optionValidity, setOptionValidity] = useState(true); 
+  const [optionValidity, setOptionValidity] = useState(true);
 
   //update layer's options
   const setLayerValue = <T extends keyof LayerOptions>(paramName: T, value: LayerOptions[T]) => {
     // during the creatation, when users switch layer type from other types to TMS, 
-    //set optionValidity Trur to ensure users are able to creat new TMS layer
-    if (paramName === "layerType") {setOptionValidity(true);};
+    //set optionValidity True to ensure users are able to creat new TMS layer
+    if (paramName === "layerType") { setOptionValidity(true); };
     setValue("layersOptions", {
       ...stateParams.layersOptions,
       [configLayerId]: {
         ...stateParams.layersOptions[configLayerId],
         [paramName]: value
+      }
+    });
+  }
+
+  // update layer's zoom level
+  const setZoom = (levels: [number | string, number | string]) => {
+    setValue("layersOptions", {
+      ...stateParams.layersOptions,
+      [configLayerId]: {
+        ...stateParams.layersOptions[configLayerId],
+        minZoom: Number(levels[0]),
+        maxZoom: Number(levels[1])
       }
     });
   }
@@ -97,6 +110,20 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
         value={stateParams.layersOptions[configLayerId].layerType}
         disabled={configMode === 'edit'}
         setValue={setLayerValue}
+      />
+
+      <EuiDualRange
+        min={0}
+        max={14}
+        step={1}
+        value={[stateParams.layersOptions[configLayerId].minZoom, stateParams.layersOptions[configLayerId].maxZoom]}
+        onChange={setZoom}
+        showLabels
+        showRange
+        // showInput
+        // showTicks
+        fullWidth
+        aria-label="Zoom level"
       />
 
       {stateParams.layersOptions[configLayerId].layerType === LayerTypes.WMSLayer &&

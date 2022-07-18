@@ -18,6 +18,8 @@ export interface LayerOptions {
   typeOptions: LayerTypeOptions;
   isDesatured: boolean;
   isHide: boolean;
+  minZoom: number;
+  maxZoom: number;
 };
 
 /**
@@ -44,6 +46,8 @@ export const DEFAULT_MAP_EXPLORER_VIS_PARAMS: MapsExplorerVisParams = {
       layerType: LayerTypes.TMSLayer,
       isDesatured: false,
       isHide: false,
+      minZoom: 0,
+      maxZoom: 14,
       typeOptions: {}
     }
   },
@@ -55,5 +59,7 @@ export const DEFAULT_NEW_LAYER_OPTIONS: LayerOptions = {
   name: i18n.translate('layers.defaultNewLayerOptions.name', { defaultMessage: 'New Layer' }),
   isDesatured: false,
   typeOptions: {},
-  isHide: false
+  isHide: false,
+  minZoom: 0,
+  maxZoom: 14,
 } 

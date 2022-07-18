@@ -86,7 +86,7 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
    * @returns 
    */
   isReusable(option: any) {
-    return false;
+    return this._options.minZoom === option.minZoom && this._options.maxZoom === option.maxZoom;
   }
 
   /**

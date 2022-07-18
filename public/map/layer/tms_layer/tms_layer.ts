@@ -3,7 +3,7 @@
  * GitHub history for details.
  */
 
-import { OpenSearchDashboardsMapLayer } from "../../..";
+import { LayerOptions, OpenSearchDashboardsMapLayer } from "../../..";
 import {
     createRegionBlockedWarning,
     removeRegionBlockedWarning
@@ -29,7 +29,7 @@ export class TMSLayer extends OpenSearchDashboardsMapLayer {
         this._leafletLayer = null;
     }
 
-    async decorateOptions() {
+    async decorateOptions(options: LayerOptions) {
         const emsTileLayerId = getEmsTileLayerId();
 
         try {
@@ -59,8 +59,8 @@ export class TMSLayer extends OpenSearchDashboardsMapLayer {
                 const showZoomMessage = serviceSettings.shouldShowZoomMessage(initMapLayer);
                 delete initMapLayer.subdomains;
                 delete initMapLayer.id;
-                const options = { ...this._options, ...initMapLayer, showZoomMessage, ...meta };
-                return options;
+                const newOptions = { ...initMapLayer, showZoomMessage, ...meta, ...options };
+                return newOptions;
             }
         } catch (e: any) {
             getToasts().addWarning(e.message);
@@ -118,15 +118,5 @@ export class TMSLayer extends OpenSearchDashboardsMapLayer {
         if (this._leafletLayer) {
             this._leafletLayer.redraw();
         }
-    }
-
-    /**
-     * Depedning on the passing in options, 
-     * whether updateOptions or recreate new layer
-     * @param option 
-     * @returns 
-     */
-    isReusable(option: any): boolean {
-        return true;
     }
 }
