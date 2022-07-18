@@ -11,7 +11,8 @@ import { VisOptionsProps } from "../../../../../src/plugins/vis_default_editor/p
 import { LayerOptions, LayerTypeOptions, LayerTypes, } from "../../common/types";
 import { ConfigMode } from "./layer_control";
 import { WmsConfigurationOptions } from "./layers_config_options/wms_configuration_options";
-import { EuiDualRange } from "@elastic/eui";
+import { EuiDualRange, EuiSpacer, EuiText } from "@elastic/eui";
+import { min } from "lodash";
 
 /**
  * Contain all Layers' options
@@ -103,7 +104,7 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
 
       <SelectOption
         label={i18n.translate('mapsExplorer.layerVisParams.layerTypeLabel', {
-          defaultMessage: 'Layer Type',
+          defaultMessage: 'Layer Type*',
         })}
         options={vis.type.editorConfig.collections.layerTypes}
         paramName="layerType"
@@ -111,6 +112,14 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
         disabled={configMode === 'edit'}
         setValue={setLayerValue}
       />
+
+      <EuiSpacer size="s"/>
+
+      <EuiText size="xs">
+         <strong>
+         <FormattedMessage id="mapsExplorer.layerVisParams.zoomLevelLable" defaultMessage="Zoom Level*"/>
+           </strong>
+      </EuiText>
 
       <EuiDualRange
         min={0}
@@ -122,7 +131,7 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
         showRange
         // showInput
         // showTicks
-        fullWidth
+        // fullWidth
         aria-label="Zoom level"
       />
 
