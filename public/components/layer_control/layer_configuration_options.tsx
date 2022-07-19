@@ -12,7 +12,10 @@ import { LayerOptions, LayerTypeOptions, LayerTypes, } from "../../common/types"
 import { ConfigMode } from "./layer_control";
 import { WmsConfigurationOptions } from "./layers_config_options/wms_configuration_options";
 import { EuiDualRange, EuiSpacer, EuiText } from "@elastic/eui";
-import { min } from "lodash";
+
+const DEFAULT_CONFIGURATION_MINZOOM = 0;
+const DEFAULT_CONFIGURATION_MAXZOOM = 14;
+const DEFAULT_CONFIGURATION_STEP = 1;
 
 /**
  * Contain all Layers' options
@@ -122,16 +125,14 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
       </EuiText>
 
       <EuiDualRange
-        min={0}
-        max={14}
-        step={1}
+        min={DEFAULT_CONFIGURATION_MINZOOM}
+        max={DEFAULT_CONFIGURATION_MAXZOOM}
+        step={DEFAULT_CONFIGURATION_STEP}
         value={[stateParams.layersOptions[configLayerId].minZoom, stateParams.layersOptions[configLayerId].maxZoom]}
         onChange={setZoom}
         showLabels
         showRange
-        // showInput
-        // showTicks
-        // fullWidth
+        showInput="inputWithPopover"
         aria-label="Zoom level"
       />
 

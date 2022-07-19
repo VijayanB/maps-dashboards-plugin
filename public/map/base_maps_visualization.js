@@ -124,7 +124,7 @@ export function BaseMapsVisualizationProvider() {
       const { layersOptions, layerIdOrder } = this._getMapsParams();
       // remove the deleted and hidden layers 
       for (let layerId in this._layers) {
-        if (layerIdOrder.find((id) => { return id === layerId }) === undefined || layersOptions[layerId].isHide === true) {
+        if (layerIdOrder.find((id) => { return id === layerId }) === undefined || layersOptions[layerId].isHidden === true) {
           this._opensearchDashboardsMap.removeLayer(this._layers[layerId]);
           delete this._layers[layerId];
         }
@@ -132,7 +132,7 @@ export function BaseMapsVisualizationProvider() {
 
       for (const id of layerIdOrder) {
         const layerOptions = layersOptions[id];
-        if (layerOptions.isHide) {
+        if (layerOptions.isHidden) {
           continue;
         }
         if (!this._layers[id]) {
