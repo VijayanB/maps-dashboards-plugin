@@ -12,10 +12,9 @@ import { LayerOptions, LayerTypeOptions, LayerTypes, } from "../../common/types"
 import { ConfigMode } from "./layer_control";
 import { WmsConfigurationOptions } from "./layers_config_options/wms_configuration_options";
 import { EuiDualRange, EuiSpacer, EuiText } from "@elastic/eui";
+import {DEFAULT_CONFIGURATION_MINZOOM, DEFAULT_CONFIGURATION_MAXZOOM, DEFAULT_CONFIGURATION_STEP} from "../../common/constants/option"
 
-const DEFAULT_CONFIGURATION_MINZOOM = 0;
-const DEFAULT_CONFIGURATION_MAXZOOM = 14;
-const DEFAULT_CONFIGURATION_STEP = 1;
+const LAYER_TYPE = "layerType";
 
 /**
  * Contain all Layers' options
@@ -53,7 +52,7 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
   const setLayerValue = <T extends keyof LayerOptions>(paramName: T, value: LayerOptions[T]) => {
     // during the creatation, when users switch layer type from other types to TMS, 
     //set optionValidity True to ensure users are able to creat new TMS layer
-    if (paramName === "layerType") { setOptionValidity(true); };
+    if (LAYER_TYPE === paramName) { setOptionValidity(true); };
     setValue("layersOptions", {
       ...stateParams.layersOptions,
       [configLayerId]: {

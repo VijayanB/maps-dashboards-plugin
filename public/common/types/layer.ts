@@ -6,6 +6,7 @@
 import { i18n } from '@osd/i18n';
 import { MapsExplorerVisParams } from '../../components/layer_control/layer_configuration_options';
 import { WMSConfigurationOptions } from '../../components/layer_control/layers_config_options/wms_configuration_options';
+import {DEFAULT_CONFIGURATION_MINZOOM, DEFAULT_CONFIGURATION_MAXZOOM} from "../constants/option"
 
 /**
  * Options which each layer included
@@ -46,8 +47,8 @@ export const DEFAULT_MAP_EXPLORER_VIS_PARAMS: MapsExplorerVisParams = {
       layerType: LayerTypes.TMSLayer,
       isDesatured: false,
       isHidden: false,
-      minZoom: 0,
-      maxZoom: 14,
+      minZoom: DEFAULT_CONFIGURATION_MINZOOM,
+      maxZoom: DEFAULT_CONFIGURATION_MAXZOOM,
       typeOptions: {}
     }
   },
@@ -60,6 +61,6 @@ export const DEFAULT_NEW_LAYER_OPTIONS: LayerOptions = {
   isDesatured: false,
   typeOptions: {},
   isHidden: false,
-  minZoom: 0,
-  maxZoom: 14,
+  minZoom: DEFAULT_CONFIGURATION_MINZOOM,
+  maxZoom: DEFAULT_CONFIGURATION_MAXZOOM,
 } 
