@@ -42,8 +42,8 @@ export class WMSLayer extends OpenSearchDashboardsMapLayer {
         const wmsOptions = {
             format: this._options.typeOptions.format || '',
             layers: this._options.typeOptions.layers || '',
-            minZoom: WMS_MINZOOM,
-            maxZoom: WMS_MAXZOOM,
+            minZoom: this._options.minZoom,
+            maxZoom: this._options.maxZoom,
             styles: this._options.typeOptions.styles || '',
             transparent: this._options.typeOptions.transparent,
             version: this._options.typeOptions.version || '1.3.0',
@@ -98,6 +98,6 @@ export class WMSLayer extends OpenSearchDashboardsMapLayer {
      * @returns 
      */
     isReusable(option: any): boolean {
-        return JSON.stringify(this._options.typeOptions) === JSON.stringify(option.typeOptions);
+        return super.isReusable(option) && JSON.stringify(this._options.typeOptions) === JSON.stringify(option.typeOptions);
     }
 }

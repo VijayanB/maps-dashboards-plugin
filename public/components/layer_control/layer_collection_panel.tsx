@@ -5,7 +5,7 @@
 
 import './layer_collection_panel.scss';
 import React from 'react';
-import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem, EuiTitle, EuiListGroup, EuiListGroupItem, EuiCallOut } from '@elastic/eui';
+import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem, EuiTitle, EuiListGroup, EuiListGroupItem, EuiCallOut, EuiButton, EuiPanel, EuiText, EuiButtonToggle, EuiSpacer } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 import './layer_collection_panel.scss';
 import { DEFAULT_NEW_LAYER_OPTIONS, LayerOptions } from '../../common/types';
@@ -59,6 +59,16 @@ function LayerCollectionPanel({
     setConfigMode('edit');
   }
 
+  const hideLayer = (layerId: string) => {
+    const oldLayersOptions = cloneDeep(state.params.layersOptions);
+    oldLayersOptions[layerId] = {
+      ...oldLayersOptions[layerId],
+      isHidden: !oldLayersOptions[layerId].isHidden,
+    }
+    setStateValue('layersOptions', oldLayersOptions);
+    setConfigDirty(false);
+  }
+
   const deleteLayer = (layerId: string) => {
     // close the layer configuration panel first if this layer is selected to be deleted
     if (layerId === configLayerId) {
@@ -103,7 +113,7 @@ function LayerCollectionPanel({
             defaultMessage="Use add icon to add your first layer."
           />}
           iconType="alert">
-          
+
         </EuiCallOut> :
         <EuiListGroup flush={true} gutterSize='none'>
           {state.params.layerIdOrder
@@ -115,6 +125,7 @@ function LayerCollectionPanel({
                   options={layerOptions}
                   editLayer={editLayer}
                   deleteLayer={deleteLayer}
+                  hideLayer={hideLayer}
                   isConfigDirty={isConfigDirty}
                 />
               )
@@ -133,6 +144,7 @@ interface LayerCollectionPanelItemProps {
   options: LayerOptions,
   editLayer: (layerId: string) => void;
   deleteLayer: (layerId: string) => void;
+  hideLayer: (layerId: string) => void;
   isConfigDirty: boolean;
 }
 
@@ -143,24 +155,59 @@ interface LayerCollectionPanelItemProps {
  * @returns 
  */
 function LayerCollectionPanelItem(props: LayerCollectionPanelItemProps) {
-  const { configLayerId, options, editLayer, deleteLayer, isConfigDirty } = props;
+  const { configLayerId, options, editLayer, deleteLayer, hideLayer, isConfigDirty } = props;
   return (
-    <EuiListGroupItem
-      label={options.name}
-      size='s'
-      color='text'
-      isActive={options.id === configLayerId}
-      isDisabled={configLayerId !== undefined && configLayerId !== options.id && isConfigDirty}
-      onClick={configLayerId !== undefined && isConfigDirty ? () => { } : () => editLayer(options.id)}
-      extraAction={{
-        color: 'primary',
-        onClick: () => deleteLayer(options.id),
-        iconType: 'trash',
-        iconSize: 's',
-        'aria-label': 'Delete Layer',
-      }}
+    <EuiFlexGroup 
+    gutterSize="none" 
+    alignItems="center"
     >
-    </EuiListGroupItem >
+
+      <EuiFlexItem grow={8}>
+        <EuiText
+          color={(configLayerId !== undefined && configLayerId !== options.id && isConfigDirty)
+            || options.isHidden? "subdued": "default"}
+          >
+          {options.name}
+        </EuiText>
+      </EuiFlexItem>
+
+      <EuiFlexItem grow={1}>
+        <EuiButtonToggle
+          isDisabled={(configLayerId !== undefined && configLayerId !== options.id && isConfigDirty)
+            || options.isHidden}
+          label='Edit'
+          iconType="wrench"
+          onChange={configLayerId !== undefined && isConfigDirty ? () => { } : () => editLayer(options.id)}
+          isEmpty
+          isIconOnly
+       />
+      </EuiFlexItem>
+
+      <EuiFlexItem grow={1}>
+        <EuiButtonToggle
+          // disable the button
+          isDisabled={configLayerId !== undefined && configLayerId !== options.id && isConfigDirty}
+          label="Hide"
+          iconType={options.isHidden ? 'eyeClosed' : 'eye'}
+          onChange={() => hideLayer(options.id)}
+          isSelected={options.isHidden}
+          isEmpty
+          isIconOnly
+        />
+      </EuiFlexItem>
+
+      <EuiFlexItem grow={1}>
+        <EuiButtonToggle
+        isDisabled={(configLayerId !== undefined && configLayerId !== options.id && isConfigDirty )
+          || options.isHidden}
+          label='Delete'
+          onChange={() => deleteLayer(options.id)}
+          iconType="trash"
+          isEmpty
+          isIconOnly
+          />
+      </EuiFlexItem>
+    </EuiFlexGroup>
   )
 }
 

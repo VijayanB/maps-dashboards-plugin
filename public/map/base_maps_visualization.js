@@ -52,7 +52,8 @@ export function BaseMapsVisualizationProvider() {
       this._opensearchDashboardsMap = null;
       this._chartData = null; //reference to data currently on the map.
       this._mapIsLoaded = this._makeOpenSearchDashboardsMap();
-      this._layers = {} // layers id mapping to layer instance
+      // layer id : openSearchDashboards map layer
+      this._layers = {} 
     }
 
     isLoaded() {
@@ -121,9 +122,9 @@ export function BaseMapsVisualizationProvider() {
      */
     async _updateLayers() {
       const { layersOptions, layerIdOrder } = this._getMapsParams();
-      // remove the deleted layer 
+      // remove the deleted and hidden layers 
       for (let layerId in this._layers) {
-        if (layerIdOrder.find((id) => { return id === layerId }) === undefined) {
+        if (layerIdOrder.find((id) => { return id === layerId }) === undefined || layersOptions[layerId].isHidden === true) {
           this._opensearchDashboardsMap.removeLayer(this._layers[layerId]);
           delete this._layers[layerId];
         }
@@ -131,20 +132,23 @@ export function BaseMapsVisualizationProvider() {
 
       for (const id of layerIdOrder) {
         const layerOptions = layersOptions[id];
+        if (layerOptions.isHidden) {
+          continue;
+        }
         if (!this._layers[id]) {
           let newLayer = null;
           switch (layerOptions.layerType) {
             case LayerTypes.TMSLayer: newLayer = await this._createTmsLayer(layerOptions); break;
             case LayerTypes.WMSLayer: newLayer = await this._createWmsLayer(layerOptions); break;
             default:
-            throw new Error(
-              i18n.translate('mapExplorerDashboard.layerType.unsupportedErrorMessage', {
-                defaultMessage: '{layerType} layer type not recognized',
-                values: {
-                  layerType: layerOptions.layerType,
-                },
-              })
-            );
+              throw new Error(
+                i18n.translate('mapExplorerDashboard.layerType.unsupportedErrorMessage', {
+                  defaultMessage: '{layerType} layer type not recognized',
+                  values: {
+                    layerType: layerOptions.layerType,
+                  },
+                })
+              );
           }
           if (newLayer) {
             await newLayer.updateOptions(layerOptions).then(() => {
