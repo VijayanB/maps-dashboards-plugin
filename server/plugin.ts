@@ -7,7 +7,6 @@ import {
 } from '../../../src/core/server';
 
 import { MapsExplorerDashboardsPluginSetup, MapsExplorerDashboardsPluginStart } from './types';
-import { defineRoutes } from './routes';
 
 export class MapsExplorerDashboardsPlugin
   implements Plugin<MapsExplorerDashboardsPluginSetup, MapsExplorerDashboardsPluginStart> {
@@ -19,10 +18,6 @@ export class MapsExplorerDashboardsPlugin
 
   public setup(core: CoreSetup) {
     this.logger.debug('mapsExplorerDashboards: Setup');
-    const router = core.http.createRouter();
-
-    // Register server side APIs
-    defineRoutes(router);
 
     return {};
   }
