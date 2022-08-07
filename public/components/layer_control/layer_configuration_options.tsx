@@ -12,7 +12,8 @@ import { LayerOptions, LayerTypeOptions, LayerTypes, } from "../../common/types"
 import { ConfigMode } from "./layer_control";
 import { WmsConfigurationOptions } from "./layers_config_options/wms_configuration_options";
 import { EuiDualRange, EuiSpacer, EuiText } from "@elastic/eui";
-import {DEFAULT_CONFIGURATION_MINZOOM, DEFAULT_CONFIGURATION_MAXZOOM, DEFAULT_CONFIGURATION_STEP} from "../../common/constants/option"
+import { DEFAULT_CONFIGURATION_MINZOOM, DEFAULT_CONFIGURATION_MAXZOOM, DEFAULT_CONFIGURATION_STEP } from "../../common/constants/option"
+import { GeohashConfigurationOptions } from "./layers_config_options/geohash_configuration_options";
 
 const LAYER_TYPE = "layerType";
 
@@ -31,6 +32,8 @@ interface MapsExplorerLayersOptions {
 export interface MapsExplorerVisParams {
   layersOptions: MapsExplorerLayersOptions
   layerIdOrder: string[]; // The order of layer ids, from the bottom to the top
+  updateLayerId: string; // The layer id being updated
+  addTooltip: boolean; // Whehter show tool tip
 }
 
 export type MapsExlorerOptionsProps = VisOptionsProps<MapsExplorerVisParams> & {
@@ -51,7 +54,7 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
   //update layer's options
   const setLayerValue = <T extends keyof LayerOptions>(paramName: T, value: LayerOptions[T]) => {
     // during the creatation, when users switch layer type from other types to TMS, 
-    //set optionValidity True to ensure users are able to creat new TMS layer
+    // set optionValidity True to ensure users are able to creat new TMS layer
     if (LAYER_TYPE === paramName) { setOptionValidity(true); };
     setValue("layersOptions", {
       ...stateParams.layersOptions,
@@ -115,12 +118,12 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
         setValue={setLayerValue}
       />
 
-      <EuiSpacer size="s"/>
+      <EuiSpacer size="s" />
 
       <EuiText size="xs">
-         <strong>
-         <FormattedMessage id="mapsExplorer.layerVisParams.zoomLevelLable" defaultMessage="Zoom Level*"/>
-           </strong>
+        <strong>
+          <FormattedMessage id="mapsExplorer.layerVisParams.zoomLevelLable" defaultMessage="Zoom Level*" />
+        </strong>
       </EuiText>
 
       <EuiDualRange
@@ -135,9 +138,19 @@ function LayerConfigurationOptions(props: MapsExlorerOptionsProps) {
         aria-label="Zoom level"
       />
 
+      <EuiSpacer size="l" />
+
       {stateParams.layersOptions[configLayerId].layerType === LayerTypes.WMSLayer &&
         <WmsConfigurationOptions
           wms={stateParams.layersOptions[configLayerId].typeOptions}
+          setTypeOptions={setTypeOptions}
+          setOptionValidity={setOptionValidity}
+        />
+      }
+
+      {stateParams.layersOptions[configLayerId].layerType === LayerTypes.GeohashLayer &&
+        <GeohashConfigurationOptions
+          geohashOptions={stateParams.layersOptions[configLayerId].typeOptions}
           setTypeOptions={setTypeOptions}
           setOptionValidity={setOptionValidity}
         />

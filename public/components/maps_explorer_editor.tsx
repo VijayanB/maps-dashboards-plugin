@@ -40,7 +40,6 @@ function MapsExplorerEditor({
 }) {
   const visRef = useRef<HTMLDivElement>(null);
 
-
   /**
    * useMemo will executate during redenering
    * It will display the default base map image after initialization

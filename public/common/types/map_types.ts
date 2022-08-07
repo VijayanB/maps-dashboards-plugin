@@ -30,7 +30,7 @@
  * GitHub history for details.
  */
 
-export enum MapTypes {
+export enum GeohashMarkerTypes {
   ScaledCircleMarkers = 'Scaled Circle Markers',
   ShadedCircleMarkers = 'Shaded Circle Markers',
   ShadedGeohashGrid = 'Shaded Geohash Grid',

@@ -66,7 +66,7 @@ function LayerCollectionPanel({
       isHidden: !oldLayersOptions[layerId].isHidden,
     }
     setStateValue('layersOptions', oldLayersOptions);
-    setConfigDirty(false);
+    setConfigDirty(true);
   }
 
   const deleteLayer = (layerId: string) => {
@@ -80,7 +80,7 @@ function LayerCollectionPanel({
     delete newLayersOptions[layerId];
     setStateValue('layerIdOrder', newLayerIdOrder);
     setStateValue('layersOptions', newLayersOptions);
-    setConfigDirty(false);
+    setConfigDirty(true);
   }
   return (
     <>
@@ -164,7 +164,7 @@ function LayerCollectionPanelItem(props: LayerCollectionPanelItemProps) {
 
       <EuiFlexItem grow={8}>
         <EuiText
-          color={(configLayerId !== undefined && configLayerId !== options.id && isConfigDirty)
+          color={(configLayerId !== undefined && configLayerId !== options.id)
             || options.isHidden? "subdued": "default"}
           >
           {options.name}
@@ -173,7 +173,7 @@ function LayerCollectionPanelItem(props: LayerCollectionPanelItemProps) {
 
       <EuiFlexItem grow={1}>
         <EuiButtonToggle
-          isDisabled={(configLayerId !== undefined && configLayerId !== options.id && isConfigDirty)
+          isDisabled={(configLayerId !== undefined && configLayerId !== options.id)
             || options.isHidden}
           label='Edit'
           iconType="wrench"
@@ -186,7 +186,7 @@ function LayerCollectionPanelItem(props: LayerCollectionPanelItemProps) {
       <EuiFlexItem grow={1}>
         <EuiButtonToggle
           // disable the button
-          isDisabled={configLayerId !== undefined && configLayerId !== options.id && isConfigDirty}
+          isDisabled={configLayerId !== undefined && configLayerId !== options.id}
           label="Hide"
           iconType={options.isHidden ? 'eyeClosed' : 'eye'}
           onChange={() => hideLayer(options.id)}
@@ -198,7 +198,7 @@ function LayerCollectionPanelItem(props: LayerCollectionPanelItemProps) {
 
       <EuiFlexItem grow={1}>
         <EuiButtonToggle
-        isDisabled={(configLayerId !== undefined && configLayerId !== options.id && isConfigDirty )
+        isDisabled={(configLayerId !== undefined && configLayerId !== options.id)
           || options.isHidden}
           label='Delete'
           onChange={() => deleteLayer(options.id)}

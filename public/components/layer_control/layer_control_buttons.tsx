@@ -3,13 +3,12 @@
  * GitHub history for details.
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import {
   EuiFlexGroup,
   EuiFlexItem,
   EuiButton,
   EuiButtonEmpty,
-  EuiButtonToggle,
   EuiToolTip,
 } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
@@ -28,6 +27,7 @@ interface LayerControlButtonsProps {
   vis: Vis;
   applyChanges(): void;
   configMode: ConfigMode;
+  configLayerId: string | undefined;
   setConfigLayerId: (configLayerId: string | undefined) => void;
 }
 
@@ -44,6 +44,7 @@ function LayerControlButtons({
   vis,
   applyChanges,
   configMode,
+  configLayerId,
   setConfigLayerId,
 }: LayerControlButtonsProps) {
   const onClickDiscard = useCallback(() => {
@@ -56,12 +57,13 @@ function LayerControlButtons({
 
   return (
     <div className="layerControl__buttons">
-      <EuiFlexGroup justifyContent="spaceBetween" gutterSize="none" responsive={false}>
+      <EuiFlexGroup alignItems='flexEnd' justifyContent="spaceBetween"  gutterSize="none" responsive={false}>
         <EuiFlexItem grow={false}>
           <EuiButtonEmpty
             data-test-subj="layerControlDiscardButton"
             iconType={"cross"}
             onClick={onClickDiscard}
+            disabled={!isDirty && !configLayerId}
             size="s"
           >
             {(configMode === 'edit' && !isDirty) ? <FormattedMessage

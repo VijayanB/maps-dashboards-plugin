@@ -17,6 +17,7 @@ import { I18nProvider } from '@osd/i18n/react';
 import './layer_control.scss'
 import { LayerControlButtons } from './layer_control_buttons';
 import { useDebounce } from 'react-use';
+import { DEFAULT_MAP_EXPLORER_VIS_PARAMS } from '../../common/types/layer';
 
 /**
  * use ConfigMode to display different UI when users want to 
@@ -96,7 +97,10 @@ function LayerControl({
     setConfigMode('edit');
     vis.setState({
       ...vis.serialize(),
-      params: state.params,
+      params: {
+        ...state.params,
+        updateLayerId: configLayerId
+      },
       data: {
         aggs: state.data.aggs ? (state.data.aggs.aggs.map((agg) => agg.toJSON()) as any) : [],
       },
@@ -110,6 +114,14 @@ function LayerControl({
     setConfigLayerId(undefined);
   }, [vis, state, formState.invalid, setTouched, isDirty, eventEmitter, embeddableHandler]);
 
+  /**
+   * useMemo will executate during rendering
+   * It will permanently apply the default state params to vis.
+   */
+  useMemo(() => {
+    applyChanges();
+  }, []);
+
   const onSubmit: KeyboardEventHandler<HTMLFormElement> = useCallback(
     (event) => {
       if (event.ctrlKey && event.key === keys.ENTER) {
@@ -120,18 +132,6 @@ function LayerControl({
       }
     },
     [applyChanges]
-  );
-
-  // help to re-render the visualization to avoid delay on the webpage
-  useDebounce(
-    () => {
-      if (!isDirty) {
-        applyChanges();
-      }
-    },
-    // 300ms
-    300,
-    [isDirty, applyChanges]
   );
 
   // subscribe on the options status 
@@ -213,11 +213,12 @@ function LayerControl({
               <LayerConfigurationPanel
                 dataTabProps={dataTabProps}
                 optionTabProps={optionTabProps}
+                stateParams={state.params}
                 configLayerId={configLayerId}
                 configMode={configMode}
               />
             </form>}
-          {configLayerId && <EuiFlexItem grow={false}>
+          {<EuiFlexItem grow={false}>
             <LayerControlButtons
               applyChanges={applyChanges}
               dispatch={dispatch}
@@ -226,6 +227,7 @@ function LayerControl({
               isInvalid={formState.invalid}
               vis={vis}
               configMode={configMode}
+              configLayerId={configLayerId}
               setConfigLayerId={setConfigLayerId}
             />
           </EuiFlexItem>}
