@@ -16,8 +16,6 @@ import { LayerConfigurationPanel } from './layer_configuration_panel';
 import { I18nProvider } from '@osd/i18n/react';
 import './layer_control.scss'
 import { LayerControlButtons } from './layer_control_buttons';
-import { useDebounce } from 'react-use';
-import { DEFAULT_MAP_EXPLORER_VIS_PARAMS } from '../../common/types/layer';
 
 /**
  * use ConfigMode to display different UI when users want to 
@@ -90,6 +88,7 @@ function LayerControl({
 
   // apply new data to the visualization
   const applyChanges = useCallback(() => {
+    console.log("apply changes")
     if (formState.invalid) {
       setTouched(true);
       return;
@@ -99,7 +98,7 @@ function LayerControl({
       ...vis.serialize(),
       params: {
         ...state.params,
-        updateLayerId: configLayerId
+        renderLayerIdx: undefined // render all layers one by one
       },
       data: {
         aggs: state.data.aggs ? (state.data.aggs.aggs.map((agg) => agg.toJSON()) as any) : [],
@@ -170,6 +169,8 @@ function LayerControl({
     setTouched,
     setStateValue,
     timeRange,
+    vis,
+    configLayerId
   };
 
   const optionTabProps = {
@@ -195,6 +196,7 @@ function LayerControl({
         >
           <EuiFlexItem grow={false}>
             <LayerCollectionPanel
+              vis={vis}
               state={state}
               setStateValue={setStateValue}
               configLayerId={configLayerId}

@@ -30,7 +30,7 @@
  * GitHub history for details.
  */
 
-import { CoreStart, IToasts, IUiSettingsClient } from 'opensearch-dashboards/public';
+import { CoreStart, IToasts, IUiSettingsClient, SavedObjectsStart } from 'opensearch-dashboards/public';
 import { NotificationsStart } from 'opensearch-dashboards/public';
 import { createGetterSetter } from '../../../src/plugins/opensearch_dashboards_utils/public';
 import { DataPublicPluginStart } from '../../../src/plugins/data/public';
@@ -47,6 +47,10 @@ export const getToasts = () => toast;
 let uiSettings: any;
 export const setUiSettings = (coreUiSettings: IUiSettingsClient) => (uiSettings = coreUiSettings);
 export const getUiSettings = () => uiSettings;
+
+export const [getSavedObjects, setSavedObjects] = createGetterSetter<SavedObjectsStart>(
+  'SavedObjects'
+);
 
 let opensearchDashboards: any;
 export const setOpenSearchDashboardsVersion = (version: string) => (opensearchDashboards = version);
@@ -65,6 +69,10 @@ export const [getCoreService, setCoreService] = createGetterSetter<CoreStart>('C
 export const [getFormatService, setFormatService] = createGetterSetter<
   DataPublicPluginStart['fieldFormats']
 >('data.fieldFormats');
+
+export const [getIndexPatternsService, setIndexPatternsService] = createGetterSetter<
+  DataPublicPluginStart['indexPatterns']
+>('data.indexPatterns');
 
 export const [getNotifications, setNotifications] = createGetterSetter<NotificationsStart>(
   'Notifications'

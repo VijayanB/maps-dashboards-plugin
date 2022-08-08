@@ -32,12 +32,12 @@
 
 import { i18n } from '@osd/i18n';
 import { get, round } from 'lodash';
-import { getFormatService, getQueryService } from '../maps_explorer_dashboards_services';
+import { getFormatService, getIndexPatternsService, getQueryService } from '../maps_explorer_dashboards_services';
 import { lazyLoadMapsExplorerDashboardsModules } from '../lazy_load_bundle';
 import { DEFAULT_MAP_EXPLORER_VIS_PARAMS, LayerTypes } from '../common/types/layer';
-import { getPrecision, mapTooltipProvider, geoContains } from '../../public';
+import { mapTooltipProvider, geoContains } from '../../public';
 import { tooltipFormatter } from '../../public/tooltip_formatter'
-import { getZoomPrecision } from './precision'
+import { getPrecision, getZoomPrecision } from './precision'
 
 const DEFAULT_MINZOOM = 0;
 const DEFAULT_MAXZOOM = 22; //increase this to 22. Better for WMS
@@ -82,11 +82,13 @@ export function BaseMapsVisualizationProvider() {
       this.vis = vis;
       this._container = element;
       this._opensearchDashboardsMap = null;
-      this._chartData = null; //reference to data currently on the map.
       this._mapIsLoaded = this._makeOpenSearchDashboardsMap();
       this._tooltipFormatter = mapTooltipProvider(element, tooltipFormatter);
       // layer id : openSearchDashboards map layer
       this._layers = {}
+      // layer id : opensearchResponse
+      this._opensearchResponses = {}
+      this._prepareGeohashLayer();
     }
 
     isLoaded() {
@@ -100,31 +102,6 @@ export function BaseMapsVisualizationProvider() {
       }
     }
 
-    updateGeohashAgg = () => {
-      const geohashAgg = this._getGeoHashAgg();
-      if (!geohashAgg) return;
-      const updateVarsObject = {
-        name: 'bounds',
-        data: {},
-      };
-      const bounds = this._opensearchDashboardsMap.getBounds();
-      const mapCollar = scaleBounds(bounds);
-      if (!geoContains(geohashAgg.aggConfigParams.boundingBox, mapCollar)) {
-        updateVarsObject.data.boundingBox = {
-          top_left: mapCollar.top_left,
-          bottom_right: mapCollar.bottom_right,
-        };
-      } else {
-        updateVarsObject.data.boundingBox = geohashAgg.aggConfigParams.boundingBox;
-      }
-      // todo: autoPrecision should be vis parameter, not aggConfig one
-      const zoomPrecision = getZoomPrecision();
-      updateVarsObject.data.precision = geohashAgg.aggConfigParams.autoPrecision
-        ? zoomPrecision[this.vis.getUiState().get('mapZoom')]
-        : getPrecision(geohashAgg.aggConfigParams.precision);
-
-      this.vis.eventsSubject.next(updateVarsObject);
-    };
     /**
      * Implementation of Visualization#render.
      * Child-classes can extend this method if the render-complete function requires more time until rendering has completed.
@@ -133,6 +110,9 @@ export function BaseMapsVisualizationProvider() {
      * @return {Promise}
      */
     async render(opensearchResponse, visParams) {
+      // console.log("this.vis", this.vis);
+      // console.log("visParam", visParams);
+      // console.log("opensearchResponse", opensearchResponse);
 
       if (!this._opensearchDashboardsMap) {
         //the visualization has been destroyed;
@@ -145,7 +125,68 @@ export function BaseMapsVisualizationProvider() {
       await this._updateParams();
 
       this._opensearchDashboardsMap.useUiStateFromVisualization(this.vis);
+
+      this._geohashUpdateBound = false;
       await this._updateLayers(opensearchResponse);
+      await this._triggerNextLayerRender(visParams.renderLayerIdx);
+    }
+
+    /**
+     * Trigger the layer render starting from the given renderLayerIdx.
+     * If renderlayerIndex is not provided, it will start from the first layer if available.
+     * @param {*} renderLayerIdx 
+     * @returns 
+     */
+    async _triggerNextLayerRender(renderLayerIdx) {
+      const { layerIdOrder, layersOptions } = this._getMapsParams();
+      if (layerIdOrder.length === 0 || renderLayerIdx + 1 === layerIdOrder.length) {
+        return;
+      }
+
+      const updateVarsObject = {
+        name: 'renderLayer',
+        data: {
+          indexPatternService: getIndexPatternsService()
+        },
+      };
+
+      if (renderLayerIdx === undefined) {
+        // if render layer idx is not specified, it will try to render from the first layer
+        updateVarsObject.data = {
+          ...updateVarsObject.data,
+          renderLayerIdx: 0,
+        }
+      } else {
+        // render next layer if available
+        updateVarsObject.data = {
+          ...updateVarsObject.data,
+          renderLayerIdx: renderLayerIdx + 1,
+        }
+      }
+
+      // Add geohash boundingBox and precision
+      const layerId = layerIdOrder[updateVarsObject.data.renderLayerIdx];
+      console.log("trigger id", updateVarsObject.data.renderLayerIdx, layerId);
+      if (LayerTypes.GeohashLayer === layersOptions[layerId].layerType) {
+        const geohashAgg = this._getGeoHashAgg(layerId);
+        const bounds = this._opensearchDashboardsMap.getBounds();
+        const mapCollar = scaleBounds(bounds);
+        if (geohashAgg && geoContains(geohashAgg.aggConfigParams.boundingBox, mapCollar)) {
+          updateVarsObject.data.boundingBox = geohashAgg.aggConfigParams.boundingBox;
+        } else {
+          updateVarsObject.data.boundingBox = {
+            top_left: mapCollar.top_left,
+            bottom_right: mapCollar.bottom_right,
+          };
+        }
+        // todo: autoPrecision should be vis parameter, not aggConfig one
+        const zoomPrecision = getZoomPrecision(); 
+        updateVarsObject.data.precision = geohashAgg?.aggConfigParams.autoPrecision || geohashAgg?.aggConfigParams.precision === undefined
+          ? zoomPrecision[this.vis.getUiState().get('mapZoom')]
+          : getPrecision(geohashAgg.aggConfigParams.precision);
+      }
+
+      this.vis.eventsSubject.next(updateVarsObject);
     }
 
     /**
@@ -178,7 +219,11 @@ export function BaseMapsVisualizationProvider() {
      * Update layers with new params
      */
     async _updateLayers(opensearchResponse) {
-      const { layersOptions, layerIdOrder } = this._getMapsParams();
+      const { layersOptions, layerIdOrder, renderLayerIdx } = this._getMapsParams();
+      if (renderLayerIdx === undefined) {
+        return;
+      }
+
       // remove the deleted and hidden layers 
       for (let layerId in this._layers) {
         if (layerIdOrder.find((id) => { return id === layerId }) === undefined || this._shouldHideLayer(layersOptions[layerId])) {
@@ -187,57 +232,54 @@ export function BaseMapsVisualizationProvider() {
         }
       }
 
-      for (const id of layerIdOrder) {
-        let layerOptions = layersOptions[id];
-        if (this._shouldHideLayer(layerOptions)) {
-          continue;
-        }
-        if (!this._layers[id]) {
-          let newLayer = null;
-          switch (layerOptions.layerType) {
-            case LayerTypes.TMSLayer: newLayer = await this._createTmsLayer(layerOptions); break;
-            case LayerTypes.WMSLayer: newLayer = await this._createWmsLayer(layerOptions); break;
-            case LayerTypes.GeohashLayer:
-              this.prepareGeohashLayer();
-              this._updateGeohashData(opensearchResponse);
-              newLayer = await this._createGeohashLayer(this.convertGeohashOptions(layerOptions)); break;
-            default:
-              throw new Error(
-                i18n.translate('mapExplorerDashboard.layerType.unsupportedErrorMessage', {
-                  defaultMessage: '{layerType} layer type not recognized',
-                  values: {
-                    layerType: layerOptions.layerType,
-                  },
-                })
-              );
-          }
-          if (newLayer) {
-            if (LayerTypes.GeohashLayer === layerOptions.layerType) {
-              await newLayer.update(this.convertGeohashOptions(layerOptions), this._geoJsonFeatureCollectionAndMeta).then(() => {
-                this._opensearchDashboardsMap.addLayer(newLayer);
-                this._layers[id] = newLayer;
-              });
-            } else {
-              await newLayer.update(layerOptions, undefined).then(() => {
-                this._opensearchDashboardsMap.addLayer(newLayer);
-                this._layers[id] = newLayer;
-              });
-            }
-          }
-        } else {
-          if (this._hasOpenSearchResponseChanged(opensearchResponse)) {
-            switch (layerOptions.layerType) {
-              case LayerTypes.GeohashLayer: await this._updateGeohashData(opensearchResponse); break;
-            }
-          }
-          if (layerOptions.layerType === LayerTypes.GeohashLayer) {
-            await this._layers[id].update(this.convertGeohashOptions(layerOptions), this._geoJsonFeatureCollectionAndMeta);
-          } else {
-            await this._layers[id].update(layerOptions, undefined);
-          }
-        }
-        this._layers[id].bringToFront();
+      const id = layerIdOrder[renderLayerIdx];
+      console.log("visualiztion id", renderLayerIdx, id);
+      let layerOptions = layersOptions[id];
+      if (this._shouldHideLayer(layerOptions)) {
+        return;
       }
+      if (!this._layers[id]) {
+        let newLayer = null;
+        switch (layerOptions.layerType) {
+          case LayerTypes.TMSLayer: newLayer = await this._createTmsLayer(layerOptions); break;
+          case LayerTypes.WMSLayer: newLayer = await this._createWmsLayer(layerOptions); break;
+          case LayerTypes.GeohashLayer:
+            this._opensearchResponses[id] = opensearchResponse;
+            newLayer = await this._createGeohashLayer(this.convertGeohashOptions(layerOptions)); break;
+          default:
+            throw new Error(
+              i18n.translate('mapExplorerDashboard.layerType.unsupportedErrorMessage', {
+                defaultMessage: '{layerType} layer type not recognized',
+                values: {
+                  layerType: layerOptions.layerType,
+                },
+              })
+            );
+        }
+        if (newLayer) {
+          if (LayerTypes.GeohashLayer === layerOptions.layerType) {
+            await newLayer.update(this.convertGeohashOptions(layerOptions), this._opensearchResponses[id]).then(() => {
+              this._opensearchDashboardsMap.addLayer(newLayer);
+              this._layers[id] = newLayer;
+            });
+          } else {
+            await newLayer.update(layerOptions, undefined).then(() => {
+              this._opensearchDashboardsMap.addLayer(newLayer);
+              this._layers[id] = newLayer;
+            });
+          }
+        }
+      } else {
+        switch (layerOptions.layerType) {
+          case LayerTypes.GeohashLayer: this._opensearchResponses[id] = opensearchResponse; break;
+        }
+        if (layerOptions.layerType === LayerTypes.GeohashLayer) {
+          await this._layers[id].update(this.convertGeohashOptions(layerOptions), this._opensearchResponses[id]);
+        } else {
+          await this._layers[id].update(layerOptions, undefined);
+        }
+      }
+      this._layers[id].bringToFront();
     }
 
     _shouldHideLayer(layerOptions) {
@@ -246,82 +288,70 @@ export function BaseMapsVisualizationProvider() {
         || this._opensearchDashboardsMap.getZoomLevel() > layerOptions.maxZoom;
     }
 
-    async prepareGeohashLayer() {
+    async _prepareGeohashLayer() {
+      await this._mapIsLoaded;
       let previousGeohashPrecision = this._opensearchDashboardsMap.getGeohashPrecision();
       let precisionGeohashChange = false;
-
-      const uiState = this.vis.getUiState();
-      uiState.on('change', (prop) => {
-        if (prop === 'mapZoom' || prop === 'mapCenter') {
-          this.updateGeohashAgg();
-        }
-      });
 
       this._opensearchDashboardsMap.on('zoomchange', () => {
         precisionGeohashChange = previousGeohashPrecision !== this._opensearchDashboardsMap.getGeohashPrecision();
         previousGeohashPrecision = this._opensearchDashboardsMap.getGeohashPrecision();
       });
+
       this._opensearchDashboardsMap.on('zoomend', () => {
-        const geohashAgg = this._getGeoHashAgg();
-        if (!geohashAgg) {
-          return;
+        for (const idx in this._getMapsParams().layerIdOrder) {
+          const layerId = this._getMapsParams().layerIdOrder[idx];
+          const geohashAgg = this._getGeoHashAgg(layerId);
+          if (!geohashAgg) {
+            continue;
+          }
+          const isAutoPrecision =
+            typeof geohashAgg.aggConfigParams.autoPrecision === 'boolean'
+              ? geohashAgg.aggConfigParams.autoPrecision
+              : true;
+          if (!isAutoPrecision) {
+            continue;
+          }
         }
-        const isAutoPrecision =
-          typeof geohashAgg.aggConfigParams.autoPrecision === 'boolean'
-            ? geohashAgg.aggConfigParams.autoPrecision
-            : true;
-        if (!isAutoPrecision) {
-          return;
-        }
-        if (precisionGeohashChange) {
-          this.updateGeohashAgg();
-        } else {
-          //when we filter queries by collar
-          this._updateGeohashData(this._geoJsonFeatureCollectionAndMeta);
-        }
+        // re-render starting from the first layer.
+        this._triggerNextLayerRender();
       });
 
       this._opensearchDashboardsMap.on('drawCreated:rectangle', (event) => {
-        const geohashAgg = this._getGeoHashAgg();
-        this.addSpatialFilter(geohashAgg, 'geo_bounding_box', event.bounds);
+        this._addSpatialFilters('geo_bounding_box', event.bounds);
       });
+
       this._opensearchDashboardsMap.on('drawCreated:polygon', (event) => {
-        const geohashAgg = this._getGeoHashAgg();
-        this.addSpatialFilter(geohashAgg, 'geo_polygon', { points: event.points });
+        this._addSpatialFilters('geo_polygon', { points: event.points });
       });
     }
 
-    addSpatialFilter(agg, filterName, filterData) {
+    _addSpatialFilters(filterName, filterData) {
+      let filters = [];
+      for (const idx in this._getMapsParams().layerIdOrder) {
+        const layerId = this._getMapsParams().layerIdOrder[idx];
+        const geohashAgg = this._getGeoHashAgg(layerId);
+        if (!geohashAgg) {
+          continue;
+        }
+        filters = [...filters, this._createSpatialFilter(geohashAgg, filterName, filterData)];
+      }
+      const { filterManager } = getQueryService();
+      filterManager.addFilters(filters);
+      this.vis.updateState();
+    }
+
+    _createSpatialFilter(agg, filterName, filterData) {
       if (!agg) {
         return;
       }
 
-      const indexPatternName = agg.indexPatternId;
       const field = agg.aggConfigParams.field;
-      const filter = { meta: { negate: false, index: indexPatternName } };
+      const filter = { meta: { negate: false } };
       filter[filterName] = { ignore_unmapped: true };
       filter[filterName][field] = filterData;
 
-      const { filterManager } = getQueryService();
-      filterManager.addFilters([filter]);
-
-      this.vis.updateState();
-    }
-
-
-    // @param opensearchResponse
-    async _updateGeohashData(geojsonFeatureCollectionAndMeta) {
-      // Only recreate geohash layer when there is new aggregation data
-      // Exception is Heatmap: which needs to be redrawn every zoom level because the clustering is based on meters per pixel
-      if (
-        this._getMapsParams().geohashMarkerTypes !== 'Heatmap' &&
-        geojsonFeatureCollectionAndMeta === this._geoJsonFeatureCollectionAndMeta
-      ) {
-        return;
-      }
-
-      this._geoJsonFeatureCollectionAndMeta = geojsonFeatureCollectionAndMeta;
-      this.updateGeohashAgg();
+      return filter;
     }
 
     async _createTmsLayer(newOptions) {
@@ -347,13 +377,13 @@ export function BaseMapsVisualizationProvider() {
       return {
         ...newOptions,
         label: metricLabel,
-        valueFormatter: this._geoJsonFeatureCollectionAndMeta
+        valueFormatter: this._opensearchResponses[newOptions.id]
           ? metricFormat.getConverterFor('text')
           : null,
-        tooltipFormatter: this._geoJsonFeatureCollectionAndMeta
+        tooltipFormatter: this._opensearchResponses[newOptions.id]
           ? this._tooltipFormatter.bind(null, metricLabel, metricFormat.getConverterFor('text'))
           : null,
-        isFilteredByCollar: this._isFilteredByCollar(),
+        isFilteredByCollar: this._isFilteredByCollar(newOptions.id),
       };
     }
 
@@ -361,17 +391,12 @@ export function BaseMapsVisualizationProvider() {
       const { GeohashLayer } = await import('./layer/geohash_layer/geohash_layer');
 
       this._geohashLayer = new GeohashLayer(
-        this._geoJsonFeatureCollectionAndMeta,
+        this._opensearchResponses[newOptions.id],
         newOptions,
         this._opensearchDashboardsMap,
         (await lazyLoadMapsExplorerDashboardsModules()).L
       );
       return this._geohashLayer;
-    }
-
-
-    _hasOpenSearchResponseChanged(data) {
-      return this._chartData !== data;
     }
 
     /**
@@ -392,15 +417,15 @@ export function BaseMapsVisualizationProvider() {
       };
     }
 
-    _getGeoHashAgg() {
+    _getGeoHashAgg(layerId) {
       return (
-        this._geoJsonFeatureCollectionAndMeta && this._geoJsonFeatureCollectionAndMeta.meta.geohash
+        this._opensearchResponses[layerId] && this._opensearchResponses[layerId].meta.geohash
       );
     }
 
-    _isFilteredByCollar() {
+    _isFilteredByCollar(layerId) {
       const DEFAULT = false;
-      const agg = this._getGeoHashAgg();
+      const agg = this._getGeoHashAgg(layerId);
       if (agg) {
         return get(agg, 'aggConfigParams.isFilteredByCollar', DEFAULT);
       } else {

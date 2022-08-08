@@ -5,17 +5,19 @@
 
 import './layer_collection_panel.scss';
 import React from 'react';
-import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem, EuiTitle, EuiListGroup, EuiListGroupItem, EuiCallOut, EuiButton, EuiPanel, EuiText, EuiButtonToggle, EuiSpacer } from '@elastic/eui';
+import { EuiButtonIcon, EuiFlexGroup, EuiFlexItem, EuiTitle, EuiListGroup, EuiCallOut, EuiText, EuiButtonToggle } from '@elastic/eui';
 import { FormattedMessage } from '@osd/i18n/react';
 import './layer_collection_panel.scss';
 import { DEFAULT_NEW_LAYER_OPTIONS, LayerOptions } from '../../common/types';
 import { cloneDeep } from 'lodash';
 import { EditorVisState } from 'src/plugins/vis_default_editor/public';
-import { VisParams } from 'src/plugins/visualizations/public';
+import { Vis, VisParams } from 'src/plugins/visualizations/public';
 import { v4 as uuidv4 } from 'uuid';
 import { ConfigMode } from './layer_control';
+import { getIndexPatternsService } from '../../maps_explorer_dashboards_services';
 
 interface LayerCollectionPanelProps {
+  vis: Vis;
   state: EditorVisState;
   setStateValue: <T extends string | number>(paramName: T, value: VisParams[T]) => void;
   configLayerId: string | undefined;
@@ -30,6 +32,7 @@ interface LayerCollectionPanelProps {
  * @returns 
  */
 function LayerCollectionPanel({
+  vis,
   state,
   setStateValue,
   configLayerId,
@@ -54,9 +57,25 @@ function LayerCollectionPanel({
     setConfigLayerId(newLayerId);
   }
 
-  const editLayer = (layerId: string) => {
+  const editLayer = async (layerId: string) => {
     setConfigLayerId(layerId);
     setConfigMode('edit');
+
+    const layerData = state.params.layersData[layerId];
+    const indexPattern = await getIndexPatternsService().get(layerData.searchSourceFields.index.id);
+
+    await vis.setState({
+      ...vis.serialize(),
+      data: {
+        searchSource: {
+          ...layerData.searchSourceFields,
+          index: indexPattern
+        },
+        aggs: layerData.aggConfigs
+      }
+    })
+    state.data.aggs = vis.data.aggs;
+    state.data.indexPattern = indexPattern;
   }
 
   const hideLayer = (layerId: string) => {
