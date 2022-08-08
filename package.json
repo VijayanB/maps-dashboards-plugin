@@ -8,6 +8,7 @@
     "osd": "node ../../scripts/osd"
   },
   "dependencies": {
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "lodash": "^4.17.21"
   }
 }

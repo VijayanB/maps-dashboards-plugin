@@ -58,14 +58,14 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
 
   const wmsLink = (
     <EuiLink href="http://www.opengeospatial.org/standards/wms" target="_blank">
-      <FormattedMessage id="maps_legacy.wmsOptions.wmsLinkText" defaultMessage="OGC standard" />
+      <FormattedMessage id="mapsExplorerDashboards.wmsOptions.wmsLinkText" defaultMessage="OGC standard" />
     </EuiLink>
   );
   const footnoteText = (
     <>
       <span aria-hidden="true">*</span>
       <FormattedMessage
-        id="maps_legacy.wmsOptions.mapLoadFailDescription"
+        id="mapsExplorerDashboards.wmsOptions.mapLoadFailDescription"
         defaultMessage="If this parameter is incorrect, maps will fail to load."
       />
     </>
@@ -90,7 +90,7 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
       <EuiSpacer size="xs" />
       <EuiText size="xs">
         <FormattedMessage
-          id="maps_legacy.wmsOptions.wmsDescription"
+          id="mapsExplorerDashboards.wmsOptions.wmsDescription"
           defaultMessage="WMS is an {wmsLink} for map image services."
           values={{ wmsLink }}
         />
@@ -100,13 +100,13 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
       <TextInputOption
         label={
           <>
-            <FormattedMessage id="maps_legacy.wmsOptions.wmsUrlLabel" defaultMessage="WMS url" />
+            <FormattedMessage id="mapsExplorerDashboards.wmsOptions.wmsUrlLabel" defaultMessage="WMS url" />
             <span aria-hidden="true">*</span>
           </>
         }
         helpText={
           <FormattedMessage
-            id="maps_legacy.wmsOptions.urlOfWMSWebServiceTip"
+            id="mapsExplorerDashboards.wmsOptions.urlOfWMSWebServiceTip"
             defaultMessage="The URL of the WMS web service."
           />
         }
@@ -118,13 +118,13 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
       <TextInputOption
         label={
           <FormattedMessage
-            id="maps_legacy.wmsOptions.wmsLayersLabel"
+            id="mapsExplorerDashboards.wmsOptions.wmsLayersLabel"
             defaultMessage="WMS sub-layers"
           />
         }
         helpText={
           <FormattedMessage
-            id="maps_legacy.wmsOptions.listOfLayersToUseTip"
+            id="mapsExplorerDashboards.wmsOptions.listOfLayersToUseTip"
             defaultMessage="A comma separated list of layers to use."
           />
         }
@@ -137,7 +137,7 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
         label={
           <>
             <FormattedMessage
-              id="maps_legacy.wmsOptions.wmsVersionLabel"
+              id="mapsExplorerDashboards.wmsOptions.wmsVersionLabel"
               defaultMessage="WMS version"
             />
             <span aria-hidden="true">*</span>
@@ -145,7 +145,7 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
         }
         helpText={
           <FormattedMessage
-            id="maps_legacy.wmsOptions.versionOfWMSserverSupportsTip"
+            id="mapsExplorerDashboards.wmsOptions.versionOfWMSserverSupportsTip"
             defaultMessage="The version of WMS the server supports."
           />
         }
@@ -158,7 +158,7 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
         label={
           <>
             <FormattedMessage
-              id="maps_legacy.wmsOptions.wmsFormatLabel"
+              id="mapsExplorerDashboards.wmsOptions.wmsFormatLabel"
               defaultMessage="WMS format"
             />
             <span aria-hidden="true">*</span>
@@ -166,7 +166,7 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
         }
         helpText={
           <FormattedMessage
-            id="maps_legacy.wmsOptions.imageFormatToUseTip"
+            id="mapsExplorerDashboards.wmsOptions.imageFormatToUseTip"
             defaultMessage="Usually image/png or image/jpeg. Use png if the server will return transparent layers."
           />
         }
@@ -178,13 +178,13 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
       <TextInputOption
         label={
           <FormattedMessage
-            id="maps_legacy.wmsOptions.wmsAttributionLabel"
+            id="mapsExplorerDashboards.wmsOptions.wmsAttributionLabel"
             defaultMessage="WMS attribution"
           />
         }
         helpText={
           <FormattedMessage
-            id="maps_legacy.wmsOptions.attributionStringTip"
+            id="mapsExplorerDashboards.wmsOptions.attributionStringTip"
             defaultMessage="Attribution string for the lower right corner."
           />
         }
@@ -197,7 +197,7 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
         label={
           <>
             <FormattedMessage
-              id="maps_legacy.wmsOptions.wmsStylesLabel"
+              id="mapsExplorerDashboards.wmsOptions.wmsStylesLabel"
               defaultMessage="WMS styles"
             />
             <span aria-hidden="true">*</span>
@@ -205,7 +205,7 @@ function WmsConfigurationOptions({ wms, setTypeOptions, setOptionValidity }: Wms
         }
         helpText={
           <FormattedMessage
-            id="maps_legacy.wmsOptions.wmsServerSupportedStylesListTip"
+            id="mapsExplorerDashboards.wmsOptions.wmsServerSupportedStylesListTip"
             defaultMessage="A comma separated list of WMS server supported styles to use. Blank in most cases."
           />
         }

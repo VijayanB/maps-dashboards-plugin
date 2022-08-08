@@ -5,6 +5,7 @@ import { Vis } from '../../../src/plugins/visualizations/public';
 import { MapsExplorerDashboardsVisualizationDependencies } from './plugin';
 import { LayerTypes } from './common/types';
 import { MapsExplorerEditorController } from './components/maps_explorer_editor_controller';
+import { Schemas } from '../../../src/plugins/vis_default_editor/public';
 
 export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: MapsExplorerDashboardsVisualizationDependencies) => {
   const { uiSettings, getServiceSettings } = dependencies;
@@ -24,22 +25,51 @@ export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: Maps
     editor: MapsExplorerEditorController,
     editorConfig: {
       collections: {
-        colorSchemas: truncatedColorSchemas,
+        colorRamp: truncatedColorSchemas,
         layerTypes: [
           {
             value: LayerTypes.TMSLayer,
             text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.tmsLayerText', {
-              defaultMessage: 'TMS Layer',
+              defaultMessage: 'Base Map',
             }),
           },
           {
             value: LayerTypes.WMSLayer,
+            text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.wmsLayerText', {
+              defaultMessage: 'Web Map Service',
+            }),
+          },
+          {
+            value: LayerTypes.GeohashLayer,
             text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.geohashLayerText', {
-              defaultMessage: 'WMS Layer',
+              defaultMessage: 'Coordinate',
             }),
           },
         ],
       },
+      schemas: new Schemas([
+        {
+          group: 'metrics',
+          name: 'metric',
+          title: i18n.translate('tileMap.vis.map.editorConfig.schemas.metricTitle', {
+            defaultMessage: 'Value',
+          }),
+          min: 1,
+          max: 1,
+          aggFilter: ['count', 'avg', 'sum', 'min', 'max', 'cardinality', 'top_hits'],
+          defaults: [{ schema: 'metric', type: 'count' }],
+        },
+        {
+          group: 'buckets',
+          name: 'segment',
+          title: i18n.translate('tileMap.vis.map.editorConfig.schemas.geoCoordinatesTitle', {
+            defaultMessage: 'Geo coordinates',
+          }),
+          aggFilter: ['geohash_grid'],
+          min: 1,
+          max: 1,
+        },
+      ]),
     },
     setup: async (vis: Vis) => {
       let tmsLayers;

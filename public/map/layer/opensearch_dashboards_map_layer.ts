@@ -38,6 +38,7 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
   _leafletLayer: any;
   _attribution: any;
   _options: LayerOptions;
+  _data: any;
   _opensearchDashboardsMap: any;
 
   constructor(opensearchDashboardsMap: any, options: LayerOptions) {
@@ -52,7 +53,7 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
   }
 
   addToLeafletMap(leafletMap: any) {
-    this._leafletLayer.addTo(leafletMap);
+;    this._leafletLayer.addTo(leafletMap);
   }
 
   removeFromLeafletMap(leafletMap: any) {
@@ -102,10 +103,12 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
    * Update layer's options
    * @param options The option that is specific for the layer
    */
-  async updateOptions(options: LayerOptions) {
+  async update(options: LayerOptions, data: any) {
     const newOptions = await this.decorateOptions(options);
-    if (this._leafletLayer === null || !this.isReusable(newOptions)) {
+
+    if (this._leafletLayer === null || !this.isReusable(newOptions) || data !== this._data) {
       this._options = newOptions;
+      this._data = data;
       if (this._leafletLayer !== null) {
         this.removeFromLeafletMap(this._opensearchDashboardsMap._leafletMap);
       }
@@ -122,6 +125,8 @@ export class OpenSearchDashboardsMapLayer extends EventEmitter {
   }
 
   bringToFront() {
-    this._leafletLayer.bringToFront();
+    if (this._leafletLayer.bringToFront) {
+      this._leafletLayer.bringToFront();
+    }
   }
 }

@@ -32,7 +32,8 @@
 
 import { min, isEqual } from 'lodash';
 import { i18n } from '@osd/i18n';
-import { OpenSearchDashboardsMapLayer, MapTypes } from '../../..';
+import { OpenSearchDashboardsMapLayer } from '../../..';
+import { GeohashMarkerTypes } from '../../../components/layer_control/layers_config_options/geohash_configuration_options';
 import { HeatmapMarkers } from './markers/heatmap';
 import { ScaledCirclesMarkers } from './markers/scaled_circles';
 import { ShadedCirclesMarkers } from './markers/shaded_circles';
@@ -40,95 +41,91 @@ import { GeohashGridMarkers } from './markers/geohash_grid';
 
 export class GeohashLayer extends OpenSearchDashboardsMapLayer {
   constructor(
-    featureCollection,
-    featureCollectionMetaData,
+    data,
     options,
-    zoom,
     opensearchDashboardsMap,
     leaflet
   ) {
     super();
 
-    this._featureCollection = featureCollection;
-    this._featureCollectionMetaData = featureCollectionMetaData;
-
-    this._geohashOptions = options;
-    this._zoom = zoom;
+    this._data = data;
+    this._options = options;
     this._opensearchDashboardsMap = opensearchDashboardsMap;
     this._leaflet = leaflet;
-    const geojson = this._leaflet.geoJson(this._featureCollection);
+    const geojson = this._leaflet.geoJson(this._data.featureCollection);
     this._bounds = geojson.getBounds();
-    this._createGeohashMarkers();
+    this.createLeafletLayer();
     this._lastBounds = null;
   }
 
-  _createGeohashMarkers() {
+  createLeafletLayer() {
     const markerOptions = {
-      isFilteredByCollar: this._geohashOptions.isFilteredByCollar,
-      valueFormatter: this._geohashOptions.valueFormatter,
-      tooltipFormatter: this._geohashOptions.tooltipFormatter,
-      label: this._geohashOptions.label,
-      colorRamp: this._geohashOptions.colorRamp,
+      isFilteredByCollar: this._options.isFilteredByCollar,
+      valueFormatter: this._options.valueFormatter,
+      tooltipFormatter: this._options.tooltipFormatter,
+      label: this._options.label,
+      colorRamp: this._options.typeOptions.colorRamp,
     };
-    switch (this._geohashOptions.mapType) {
-      case MapTypes.ScaledCircleMarkers:
+
+    switch (this._options.typeOptions.geohashMarkerTypes) {
+      case GeohashMarkerTypes.ScaledCircleMarkers:
         this._geohashMarkers = new ScaledCirclesMarkers(
-          this._featureCollection,
-          this._featureCollectionMetaData,
+          this._data.featureCollection,
+          this._data.meta,
           markerOptions,
-          this._zoom,
+          this._opensearchDashboardsMap.getZoomLevel(),
           this._opensearchDashboardsMap,
           this._leaflet
         );
         break;
-      case MapTypes.ShadedCircleMarkers:
+      case GeohashMarkerTypes.ShadedCircleMarkers:
         this._geohashMarkers = new ShadedCirclesMarkers(
-          this._featureCollection,
-          this._featureCollectionMetaData,
+          this._data.featureCollection,
+          this._data.meta,
           markerOptions,
-          this._zoom,
+          this._opensearchDashboardsMap.getZoomLevel(),
           this._opensearchDashboardsMap,
           this._leaflet
         );
         break;
-      case MapTypes.ShadedGeohashGrid:
+      case GeohashMarkerTypes.ShadedGeohashGrid:
         this._geohashMarkers = new GeohashGridMarkers(
-          this._featureCollection,
-          this._featureCollectionMetaData,
+          this._data.featureCollection,
+          this._data.meta,
           markerOptions,
-          this._zoom,
+          this._opensearchDashboardsMap.getZoomLevel(),
           this._opensearchDashboardsMap,
           this._leaflet
         );
         break;
-      case MapTypes.Heatmap:
+      case GeohashMarkerTypes.Heatmap:
         let radius = 15;
-        if (this._featureCollectionMetaData.geohashGridDimensionsAtEquator) {
-          const minGridLength = min(this._featureCollectionMetaData.geohashGridDimensionsAtEquator);
+        if (this._data.meta.geohashGridDimensionsAtEquator) {
+          const minGridLength = min(this._data.meta.geohashGridDimensionsAtEquator);
           const metersPerPixel = this._opensearchDashboardsMap.getMetersPerPixel();
           radius = minGridLength / metersPerPixel / 2;
         }
-        radius = radius * parseFloat(this._geohashOptions.heatmap.heatClusterSize);
+        radius = radius * parseFloat(this._options.typeOptions.heatClusterSize);
         this._geohashMarkers = new HeatmapMarkers(
-          this._featureCollection,
+          this._data.featureCollection,
           {
             radius: radius,
             blur: radius,
             maxZoom: this._opensearchDashboardsMap.getZoomLevel(),
             minOpacity: 0.1,
-            tooltipFormatter: this._geohashOptions.tooltipFormatter,
+            tooltipFormatter: this._options.tooltipFormatter,
           },
-          this._zoom,
-          this._featureCollectionMetaData.max,
+          this._opensearchDashboardsMap.getZoomLevel(),
+          this._data.meta.max,
           this._leaflet
         );
         break;
       default:
         throw new Error(
           i18n.translate('tileMap.geohashLayer.mapTitle', {
-            defaultMessage: '{mapType} mapType not recognized',
+            defaultMessage: '{geohashMarkerTypes} geohashMarkerTypes not recognized',
             values: {
-              mapType: this._geohashOptions.mapType,
+              geohashMarkerTypes: this._options.typeOptions.geohashMarkerTypes,
             },
           })
         );
@@ -136,7 +133,7 @@ export class GeohashLayer extends OpenSearchDashboardsMapLayer {
 
     this._geohashMarkers.on('showTooltip', (event) => this.emit('showTooltip', event));
     this._geohashMarkers.on('hideTooltip', (event) => this.emit('hideTooltip', event));
-    this._leafletLayer = this._geohashMarkers.getLeafletLayer();
+    return this._geohashMarkers.getLeafletLayer();
   }
 
   appendLegendContents(jqueryDiv) {
@@ -148,8 +145,8 @@ export class GeohashLayer extends OpenSearchDashboardsMapLayer {
   }
 
   async getBounds() {
-    if (this._geohashOptions.fetchBounds) {
-      const geoHashBounds = await this._geohashOptions.fetchBounds();
+    if (this._options.fetchBounds) {
+      const geoHashBounds = await this._options.fetchBounds();
       if (geoHashBounds) {
         const northEast = this._leaflet.latLng(
           geoHashBounds.top_left.lat,
@@ -168,31 +165,31 @@ export class GeohashLayer extends OpenSearchDashboardsMapLayer {
 
   updateExtent() {
     // Client-side filtering is only enabled when server-side filter is not used
-    if (!this._geohashOptions.isFilteredByCollar) {
+    if (!this._options.isFilteredByCollar) {
       const bounds = this._opensearchDashboardsMap.getLeafletBounds();
       if (!this._lastBounds || !this._lastBounds.equals(bounds)) {
         //this removal is required to trigger the bounds filter again
-        this._opensearchDashboardsMap.removeLayer(this);
-        this._createGeohashMarkers();
-        this._opensearchDashboardsMap.addLayer(this);
+        this.removeFromLeafletMap(this._opensearchDashboardsMap._leafletMap);
+        this._leafletLayer = this.createLeafletLayer();
+        this.addToLeafletMap(this._opensearchDashboardsMap._leafletMap);
       }
       this._lastBounds = bounds;
     }
   }
 
   isReusable(options) {
-    if (isEqual(this._geohashOptions, options)) {
+    if (isEqual(this._options, options)) {
       return true;
     }
 
     //check if any impacts leaflet styler function
-    if (this._geohashOptions.colorRamp !== options.colorRamp) {
+    if (this._options.typeOptions.colorRamp !== options.typeOptions.colorRamp) {
       return false;
-    } else if (this._geohashOptions.mapType !== options.mapType) {
+    } else if (this._options.typeOptions.geohashMarkerTypes !== options.typeOptions.geohashMarkerTypes) {
       return false;
     } else if (
-      this._geohashOptions.mapType === 'Heatmap' &&
-      !isEqual(this._geohashOptions.heatmap, options)
+      this._options.typeOptions.geohashMarkerTypes === 'Heatmap' &&
+      !isEqual(this._options.typeOptions.heatClusterSize, options.typeOptions.heatClusterSize)
     ) {
       return false;
     } else {
