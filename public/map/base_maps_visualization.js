@@ -123,7 +123,6 @@ export function BaseMapsVisualizationProvider() {
         ? zoomPrecision[this.vis.getUiState().get('mapZoom')]
         : getPrecision(geohashAgg.aggConfigParams.precision);
 
-        console.log("this.vis.eventsSubject.next", updateVarsObject)
       this.vis.eventsSubject.next(updateVarsObject);
     };
     /**
@@ -134,9 +133,6 @@ export function BaseMapsVisualizationProvider() {
      * @return {Promise}
      */
     async render(opensearchResponse, visParams) {
-      console.log("RENDER");
-      console.log("opensearchResponse ", opensearchResponse);
-      console.log("visParams ", visParams);
 
       if (!this._opensearchDashboardsMap) {
         //the visualization has been destroyed;

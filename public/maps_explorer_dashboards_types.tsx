@@ -30,19 +30,19 @@ export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: Maps
           {
             value: LayerTypes.TMSLayer,
             text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.tmsLayerText', {
-              defaultMessage: 'TMS Layer',
+              defaultMessage: 'Base Map',
             }),
           },
           {
             value: LayerTypes.WMSLayer,
             text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.wmsLayerText', {
-              defaultMessage: 'WMS Layer',
+              defaultMessage: 'Web Map Service',
             }),
           },
           {
             value: LayerTypes.GeohashLayer,
             text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.geohashLayerText', {
-              defaultMessage: 'Coordinate Layer',
+              defaultMessage: 'Coordinate',
             }),
           },
         ],
