@@ -33,7 +33,7 @@
 import { min, isEqual } from 'lodash';
 import { i18n } from '@osd/i18n';
 import { OpenSearchDashboardsMapLayer } from '../../..';
-import { GeohashMarkerTypes } from '../../../common/types/map_types';
+import { GeohashMarkerTypes } from '../../../components/layer_control/layers_config_options/geohash_configuration_options';
 import { HeatmapMarkers } from './markers/heatmap';
 import { ScaledCirclesMarkers } from './markers/scaled_circles';
 import { ShadedCirclesMarkers } from './markers/shaded_circles';

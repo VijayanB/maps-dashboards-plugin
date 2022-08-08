@@ -34,5 +34,4 @@
  * Use * syntax so that these exports do not break when internal
  * types are stripped.
  */
-export * from './map_types';
 export * from './layer';

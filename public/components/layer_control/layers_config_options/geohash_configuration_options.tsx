@@ -4,11 +4,10 @@
  */
 
 import React, { useEffect } from 'react';
-import { EuiPanel, EuiSpacer } from '@elastic/eui';
+import { EuiPanel } from '@elastic/eui';
 import { i18n } from '@osd/i18n';
 
-import { VisOptionsProps } from 'src/plugins/vis_default_editor/public';
-import { BasicOptions, RangeOption, SelectOption, SwitchOption, truncatedColorSchemas } from '../../../../../../src/plugins/charts/public';
+import { RangeOption, SelectOption, truncatedColorSchemas } from '../../../../../../src/plugins/charts/public';
 
 export enum GeohashMarkerTypes {
   ScaledCircleMarkers = 'Scaled Circle Markers',
@@ -17,6 +16,7 @@ export enum GeohashMarkerTypes {
   Heatmap = 'Heatmap',
 }
 
+const DEAFULT_HEAT_CLUSTER_SIZE = 1.5;
 const GEOHASH_MAP_TYPES = [
   {
     value: GeohashMarkerTypes.ScaledCircleMarkers,
@@ -68,6 +68,12 @@ function GeohashConfigurationOptions(props: GeohashConfigurationOptionsProps) {
     if (!geohashOptions.geohashMarkerTypes) {
       setTypeOptions('geohashMarkerTypes', GEOHASH_MAP_TYPES[0].value);
     }
+    if (!geohashOptions.heatClusterSize) {
+      setTypeOptions('heatClusterSize', DEAFULT_HEAT_CLUSTER_SIZE);
+    }
+    if (!geohashOptions.colorRamp) {
+      setTypeOptions('colorRamp', COLOR_RAMP[0].value);
+    }
   }, [setTypeOptions, geohashOptions.geohashMarkerTypes, GEOHASH_MAP_TYPES]);
 
   // Validate user input
@@ -84,7 +90,7 @@ function GeohashConfigurationOptions(props: GeohashConfigurationOptionsProps) {
       <EuiPanel paddingSize="s">
         <SelectOption
           label={i18n.translate('mapsExplorerDashboards.geohashLayerOptions.geohashMarkerTypesLabel', {
-            defaultMessage: 'Map type',
+            defaultMessage: 'Coordinate Map Marker Type*',
           })}
           options={GEOHASH_MAP_TYPES}
           paramName="geohashMarkerTypes"
@@ -107,7 +113,7 @@ function GeohashConfigurationOptions(props: GeohashConfigurationOptionsProps) {
         ) : (
           <SelectOption
             label={i18n.translate('mapsExplorerDashboards.geohashLayerOptions.colorRampLabel', {
-              defaultMessage: 'Color schema',
+              defaultMessage: 'Color Schema*',
             })}
             options={COLOR_RAMP}
             paramName="colorRamp"

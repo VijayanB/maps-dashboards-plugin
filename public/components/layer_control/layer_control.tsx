@@ -184,6 +184,7 @@ function LayerControl({
     timeRange,
   };
 
+  console.log("state.params", state.params)
   return (
     <I18nProvider>
       <EuiPanel paddingSize="s" className='layer-panel'>

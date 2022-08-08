@@ -42,7 +42,7 @@ export const createMapsExplorerDashboardsVisTypeDefinition = (dependencies: Maps
           {
             value: LayerTypes.GeohashLayer,
             text: i18n.translate('mapsExplorer.vis.editorConfig.layerTypes.geohashLayerText', {
-              defaultMessage: 'Geohash Layer',
+              defaultMessage: 'Coordinate Layer',
             }),
           },
         ],
