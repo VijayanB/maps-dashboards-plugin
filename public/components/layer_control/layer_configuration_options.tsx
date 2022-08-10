@@ -8,7 +8,7 @@ import { i18n } from '@osd/i18n';
 import { FormattedMessage } from '@osd/i18n/react';
 import { SelectOption, TextInputOption } from '../../../../../src/plugins/charts/public';
 import { VisOptionsProps } from "../../../../../src/plugins/vis_default_editor/public";
-import { LayerOptions, LayerTypeOptions, LayerTypes, } from "../../common/types";
+import { LayerData, LayerOptions, LayerTypeOptions, LayerTypes, } from "../../common/types";
 import { ConfigMode } from "./layer_control";
 import { WmsConfigurationOptions } from "./layers_config_options/wms_configuration_options";
 import { EuiDualRange, EuiSpacer, EuiText } from "@elastic/eui";
@@ -26,13 +26,18 @@ interface MapsExplorerLayersOptions {
   [id: string]: LayerOptions;
 }
 
+interface MapsExplorerLayersData {
+  [id: string]: LayerData;
+}
+
 /**
  * Schema of stateParams
  */
 export interface MapsExplorerVisParams {
-  layersOptions: MapsExplorerLayersOptions
+  layersOptions: MapsExplorerLayersOptions;
+  layersData: MapsExplorerLayersData;
   layerIdOrder: string[]; // The order of layer ids, from the bottom to the top
-  updateLayerId: string; // The layer id being updated
+  renderLayerIdx: number | undefined; // The layer index to be rendered; undefined will render all layers
   addTooltip: boolean; // Whehter show tool tip
 }
 

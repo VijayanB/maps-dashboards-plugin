@@ -8,6 +8,7 @@ import { MapsExplorerVisParams } from '../../components/layer_control/layer_conf
 import { WMSConfigurationOptions } from '../../components/layer_control/layers_config_options/wms_configuration_options';
 import {DEFAULT_CONFIGURATION_MINZOOM, DEFAULT_CONFIGURATION_MAXZOOM} from "../constants/option"
 import { GEOHashConfigurationOptions } from '../../components/layer_control/layers_config_options/geohash_configuration_options';
+import { IAggConfig, SearchSourceFields } from '../../../../../src/plugins/data/common';
 
 /**
  * Options which each layer included
@@ -22,6 +23,11 @@ export interface LayerOptions {
   isHidden: boolean;
   minZoom: number;
   maxZoom: number;
+};
+
+export interface LayerData {
+  searchSourceFields: SearchSourceFields;
+  aggConfigs: IAggConfig[] | undefined;
 };
 
 /**
@@ -53,8 +59,8 @@ export const DEFAULT_MAP_EXPLORER_VIS_PARAMS: MapsExplorerVisParams = {
       typeOptions: {}
     }
   },
+  layersData: {},
   layerIdOrder: ["base_roadmap"],
-  updateLayerId: "base_roadmap",
   addTooltip: true
 }
 

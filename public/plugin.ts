@@ -14,6 +14,8 @@ import {
   setOpenSearchDashboardsLegacy,
   setQueryService,
   setShareService,
+  setSavedObjects,
+  setIndexPatternsService,
 } from './maps_explorer_dashboards_services';
 import { ExpressionsPublicPlugin } from 'src/plugins/expressions/public';
 import { VisualizationsSetup } from 'src/plugins/visualizations/public';
@@ -117,9 +119,11 @@ export class MapsExplorerDashboardsPlugin
     setCoreService(core);
     setFormatService(plugins.data.fieldFormats);
     setQueryService(plugins.data.query);
+    setIndexPatternsService(plugins.data.indexPatterns);
     setNotifications(core.notifications);
     setOpenSearchDashboardsLegacy(plugins.opensearchDashboardsLegacy);
     setShareService(plugins.share);
+    setSavedObjects(core.savedObjects);
 
     return {};
   }

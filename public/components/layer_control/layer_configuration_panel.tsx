@@ -6,6 +6,7 @@ import { LayerConfigurationOptions } from "./layer_configuration_options";
 import { ConfigMode } from "./layer_control";
 import { DefaultEditorDataTab } from '../../../../../src/plugins/vis_default_editor/public';
 import { LayerTypes } from '../../common/types';
+import { LayerConfigurationData } from './layer_configuration_data';
 
 const OPTIONS_CONFIGURATION_TAB: OptionTab = {
   editor: LayerConfigurationOptions,
@@ -16,7 +17,7 @@ const OPTIONS_CONFIGURATION_TAB: OptionTab = {
   isSelected: true};
 
 const DATA_CONFIGURATION_TAB: OptionTab = {
-  editor: DefaultEditorDataTab,
+  editor: LayerConfigurationData,
   name: 'data',
   title: i18n.translate('visDefaultEditor.sidebar.tabs.dataLabel', {
     defaultMessage: 'Data',
